@@ -1,0 +1,50 @@
+{
+  "name": "careerforge-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CareerForge backend API — Express + TypeScript + MongoDB (bootstrapped per ENGINEERING_PLAYBOOK)",
+  "type": "module",
+  "main": "dist/server.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint \"src/**/*.ts\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "seed": "tsx scripts/seed.ts"
+  },
+  "dependencies": {
+    "@sentry/node": "^10.71.0",
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.3.1",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.2.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.19.1",
+    "morgan": "^1.10.0",
+    "nodemailer": "^9.0.5",
+    "zod": "^4.1.11"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/morgan": "^1.9.10",
+    "@types/node": "^24.7.0",
+    "@types/nodemailer": "^8.0.1",
+    "eslint": "^9.37.0",
+    "mongodb-memory-server": "^11.2.0",
+    "supertest": "^7.1.4",
+    "tsx": "^4.23.12",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.0",
+    "vitest": "^3.2.4"
+  }
+}
