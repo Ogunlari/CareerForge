@@ -35,7 +35,7 @@ export default function JobCard({ job, saved, onToggleSave }: JobCardProps) {
             </div>
             {onToggleSave && (
               <button
-                onClick={(e) => { e.preventDefault(); onToggleSave(job.id); }}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleSave(job.id); }}
                 className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors flex-shrink-0"
               >
                 {saved ? (
@@ -64,7 +64,7 @@ export default function JobCard({ job, saved, onToggleSave }: JobCardProps) {
               </span>
             )}
             <span className="flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5" /> {getRelativeTime(job.created_at)}
+              <Clock className="w-3.5 h-3.5" /> {getRelativeTime(job.posted_at || job.created_at)}
             </span>
           </div>
 

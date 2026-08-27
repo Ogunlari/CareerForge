@@ -30,7 +30,7 @@ export async function postJob(req: Request, res: Response): Promise<void> {
   const user = req.user as AuthUser;
   const input = createJobSchema.parse(req.body);
   const job = await service.createJob(user, input);
-  res.status(201).json({ data: job });
+  ok(res, job, 201);
 }
 
 export async function patchJob(req: Request, res: Response): Promise<void> {

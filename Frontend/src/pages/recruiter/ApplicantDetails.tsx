@@ -11,9 +11,10 @@ export default function ApplicantDetails() {
   const {
     data: application,
     isLoading: loading,
+    error,
   } = useGetApplicationByIdQuery(applicationId ?? '', { skip: !applicationId });
 
-  const [updateApplicationStatus] = useUpdateApplicationStatusMutation();
+  const [updateApplicationStatus, { error: updateError }] = useUpdateApplicationStatusMutation();
 
   const handleStatusChange = async (status: Exclude<ApplicationStatus, 'withdrawn'>) => {
     if (!applicationId) return;
@@ -26,6 +27,10 @@ export default function ApplicantDetails() {
 
   if (loading) {
     return <div className="text-center py-8">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-8 text-red-600">Failed to load application. Please try again.</div>;
   }
 
   if (!application) {
@@ -79,6 +84,9 @@ export default function ApplicantDetails() {
           {/* Actions */}
           <div className="bg-white rounded shadow p-6">
             <h3 className="font-bold mb-4">Actions</h3>
+            {updateError && (
+              <p className="text-red-600 text-sm mb-3">Failed to update status. Please try again.</p>
+            )}
             <div className="space-y-3">
               <button onClick={() => handleStatusChange('accepted')} className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
                 Accept

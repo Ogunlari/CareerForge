@@ -19,7 +19,7 @@ export default function Jobs() {
 
   const [currentPage, setCurrentPage] = useState(1);
 
-  const { data, isLoading } = useGetJobsQuery({
+  const { data, isLoading, error } = useGetJobsQuery({
     search: search || undefined,
     job_type: (jobType as JobType) || undefined,
     experience_level: experienceLevel || undefined,
@@ -84,6 +84,13 @@ export default function Jobs() {
 
             {isLoading ? (
               <Loader fullPage label="Loading jobs..." />
+            ) : error ? (
+              <div className="card p-12 text-center">
+                <p className="text-red-600 text-lg">Failed to load jobs. Please try again later.</p>
+                <button onClick={handleReset} className="btn-ghost mt-4 text-sm">
+                  Clear filters
+                </button>
+              </div>
             ) : jobs.length === 0 ? (
               <div className="card p-12 text-center">
                 <p className="text-slate-400 text-lg">No jobs found matching your criteria.</p>

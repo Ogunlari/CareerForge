@@ -6,7 +6,7 @@ export const CreateJobSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200, 'Title must be at most 200 characters'),
   description: z.string().min(10, 'Description must be at least 10 characters').max(5000, 'Description must be at most 5000 characters'),
   location: z.string().min(1, 'Location is required').max(200, 'Location must be at most 200 characters'),
-  job_type: z.enum(jobTypeValues, { errorMap: () => ({ message: 'Please select a valid job type' }) }),
+  job_type: z.enum(jobTypeValues, { error: 'Please select a valid job type' }),
   salary_min: z.coerce.number().min(0, 'Salary must be at least 0').optional().or(z.literal('')).transform((v) => v === '' ? undefined : v),
   salary_max: z.coerce.number().min(0, 'Salary must be at least 0').optional().or(z.literal('')).transform((v) => v === '' ? undefined : v),
   experience_level: z.string().optional().or(z.literal('')).transform((v) => v === '' ? undefined : v),

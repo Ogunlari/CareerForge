@@ -9,7 +9,7 @@ export const savedJobsApi = baseApi.injectEndpoints({
     }),
 
     unsaveJob: builder.mutation<{ message: string }, { studentId: string; jobId: string }>({
-      query: (body) => ({ url: '/saved-jobs', method: 'DELETE', body }),
+      query: (body) => ({ url: '/saved-jobs/unsave', method: 'POST', body }),
       invalidatesTags: ['SavedJob'],
     }),
 

@@ -16,7 +16,7 @@ export const listJobsQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
-export const createJobSchema = z.object({
+const createJobBase = z.object({
   title: z.string().min(3).max(200),
   description: z.string().min(10).max(20000),
   location: z.string().max(200).optional(),
@@ -32,7 +32,15 @@ export const createJobSchema = z.object({
   deadline: z.coerce.date().optional(),
 });
 
-export const updateJobSchema = createJobSchema
+export const createJobSchema = createJobBase.refine(
+  (data) =>
+    data.salary_min === undefined ||
+    data.salary_max === undefined ||
+    data.salary_min <= data.salary_max,
+  { message: 'salary_min must be less than or equal to salary_max.', path: ['salary_min'] },
+);
+
+export const updateJobSchema = createJobBase
   .partial()
   .extend({ status: z.enum(JOB_STATUSES).optional() })
   .strict();

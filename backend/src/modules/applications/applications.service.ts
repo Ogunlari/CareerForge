@@ -46,11 +46,11 @@ export async function createApplication(
     throw AppError.forbidden('You can only submit applications as yourself.');
   }
 
-  const job = await JobModel.findById(input.jobId);
+  const job = await JobModel.findById(input.jobId).maxTimeMS(2000);
   if (!job) throw AppError.notFound('Job not found.');
   if (job.status !== 'active') throw AppError.conflict('This job is no longer accepting applications.');
 
-  const existing = await ApplicationModel.findOne({ student_id: input.studentId, job_id: input.jobId });
+  const existing = await ApplicationModel.findOne({ student_id: input.studentId, job_id: input.jobId }).maxTimeMS(2000);
   if (existing && existing.status !== 'withdrawn') {
     throw AppError.conflict('You have already applied to this job.');
   }
@@ -166,12 +166,12 @@ export async function listJobApplications(user: AuthUser, jobId: string) {
   if (user.role !== 'admin' && String(job.recruiter_id) !== user.id) {
     throw AppError.forbidden('You can only view applicants for your own jobs.');
   }
-  const apps = await ApplicationModel.find({ job_id: jobId }).sort({ applied_at: -1 }).populate(POPULATE).exec();
+  const apps = await ApplicationModel.find({ job_id: jobId }).sort({ applied_at: -1 }).maxTimeMS(3000).populate(POPULATE).exec();
   return apps.map((a) => serializeApplication(a as never));
 }
 
 export async function getApplicationById(id: string) {
-  const app = await ApplicationModel.findById(id).populate(POPULATE);
+  const app = await ApplicationModel.findById(id).populate(POPULATE).maxTimeMS(2000);
   if (!app) throw AppError.notFound('Application not found.');
   return serializeApplication(app as never);
 }
@@ -181,7 +181,7 @@ export async function checkExisting(studentId: string, jobId: string): Promise<b
     student_id: studentId,
     job_id: jobId,
     status: { $ne: 'withdrawn' },
-  });
+  }).maxTimeMS(2000);
   return Boolean(existing);
 }
 
@@ -194,7 +194,7 @@ export async function updateStatus(
     throw AppError.forbidden('Only recruiters can change application status.');
   }
 
-  const app = await ApplicationModel.findById(applicationId);
+  const app = await ApplicationModel.findById(applicationId).maxTimeMS(2000);
   if (!app) throw AppError.notFound('Application not found.');
 
   if (user.role === 'recruiter' && String(app.recruiter_id) !== user.id) {
@@ -226,7 +226,7 @@ export async function updateStatus(
 }
 
 export async function withdraw(user: AuthUser, applicationId: string) {
-  const app = await ApplicationModel.findById(applicationId);
+  const app = await ApplicationModel.findById(applicationId).maxTimeMS(2000);
   if (!app) throw AppError.notFound('Application not found.');
 
   if (!(user.role === 'student' && String(app.student_id) === user.id) && user.role !== 'admin') {

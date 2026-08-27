@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { useGetCompanyByIdQuery, useUpdateCompanyMutation, useCreateCompanyMutation } from '@/features/companies/companiesApi';
+import { useGetCompanyByIdQuery, useUpdateCompanyMutation, useCreateCompanyMutation, useDeleteCompanyMutation } from '@/features/companies/companiesApi';
 import { extractErrorMessage } from '@/features/api/baseApi';
 import { CompanySchema } from '@/utilities/schemas';
 import type { Company } from '@/types';
@@ -21,6 +21,7 @@ export default function CompanyProfile() {
   const { data: company, isLoading, error } = useGetCompanyByIdQuery(companyId!, { skip: !companyId });
   const [updateCompany, { isLoading: isSaving }] = useUpdateCompanyMutation();
   const [createCompany, { isLoading: isCreating }] = useCreateCompanyMutation();
+  const [deleteCompany, { isLoading: isDeleting }] = useDeleteCompanyMutation();
 
   const [isEditing, setIsEditing] = useState(false);
   const [isCreatingCompany, setIsCreatingCompany] = useState(false);
@@ -96,6 +97,18 @@ export default function CompanyProfile() {
   };
 
   const resetForm = () => setFormData(emptyForm);
+
+  const handleDelete = async () => {
+    if (!companyId) return;
+    if (!window.confirm('Delete this company? This also closes all its job postings and cannot be undone.')) return;
+    setFormError(null);
+    try {
+      await deleteCompany(companyId).unwrap();
+      await refreshUser();
+    } catch (err) {
+      setFormError(extractErrorMessage(err));
+    }
+  };
 
   if (isLoading) {
     return (
@@ -231,26 +244,35 @@ export default function CompanyProfile() {
       <div className="bg-white rounded shadow p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Company Profile</h1>
-          <button
-            onClick={() => {
-              setIsEditing(!isEditing);
-              setFormError(null);
-              setFieldErrors({});
-              if (company) {
-                setFormData({
-                  name: company.name || '',
-                  description: company.description || '',
-                  website: company.website || '',
-                  location: company.location || '',
-                  industry: company.industry || '',
-                  size: company.size || '',
-                });
-              }
-            }}
-            className="bg-blue-600 text-white px-4 py-2 rounded"
-          >
-            {isEditing ? 'Cancel' : 'Edit'}
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 disabled:opacity-50"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete Company'}
+            </button>
+            <button
+              onClick={() => {
+                setIsEditing(!isEditing);
+                setFormError(null);
+                setFieldErrors({});
+                if (company) {
+                  setFormData({
+                    name: company.name || '',
+                    description: company.description || '',
+                    website: company.website || '',
+                    location: company.location || '',
+                    industry: company.industry || '',
+                    size: company.size || '',
+                  });
+                }
+              }}
+              className="bg-blue-600 text-white px-4 py-2 rounded"
+            >
+              {isEditing ? 'Cancel' : 'Edit'}
+            </button>
+          </div>
         </div>
 
         {formError && (

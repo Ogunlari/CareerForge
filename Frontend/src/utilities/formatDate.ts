@@ -1,5 +1,7 @@
-export function formatDate(date: string | Date, format: 'short' | 'long' | 'relative' = 'short'): string {
+export function formatDate(date: string | Date | undefined | null, format: 'short' | 'long' | 'relative' = 'short'): string {
+  if (!date) return '';
   const d = typeof date === 'string' ? new Date(date) : date;
+  if (isNaN(d.getTime())) return '';
   if (format === 'relative') return getRelativeTime(d);
   if (format === 'long') {
     return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -18,8 +20,10 @@ export function formatDateTime(date: string | Date): string {
   });
 }
 
-export function getRelativeTime(date: string | Date): string {
+export function getRelativeTime(date: string | Date | undefined | null): string {
+  if (!date) return '';
   const d = typeof date === 'string' ? new Date(date) : date;
+  if (isNaN(d.getTime())) return '';
   const now = new Date();
   const diff = now.getTime() - d.getTime();
   const seconds = Math.floor(diff / 1000);

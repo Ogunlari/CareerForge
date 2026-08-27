@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { Request, Response } from 'express';
 import { requireAuth } from '../../middleware/auth.middleware.js';
 import { validateBody } from '../../middleware/validate.middleware.js';
-import { ok, okList, parsePagination, param, queryString } from '../../utils/http.js';
+import { ok, okList, okMessage, parsePagination, param } from '../../utils/http.js';
 import { objectId } from '../../utils/validation.js';
 import type { AuthUser } from '../../middleware/auth.types.js';
 import { createNotification } from './notifications.repository.js';
@@ -34,7 +34,7 @@ function serialize(doc: Record<string, unknown>) {
 
 async function list(req: Request, res: Response): Promise<void> {
   const { page, limit } = parsePagination(req.query);
-  const userId = queryString(req.query.userId) || (req.user as AuthUser).id;
+  const userId = (req.user as AuthUser).id;
 
   const result = await listNotifications(userId, page, limit);
   okList(res, result);
@@ -43,17 +43,17 @@ async function list(req: Request, res: Response): Promise<void> {
 async function markReadHandler(req: Request, res: Response): Promise<void> {
   const userId = (req.user as AuthUser).id;
   await markRead(param(req, 'notificationId'), userId);
-  res.status(200).json({ message: 'Notification marked as read.' });
+  okMessage(res, 'Notification marked as read.');
 }
 
 async function markAllReadHandler(req: Request, res: Response): Promise<void> {
-  const userId = req.body?.userId ?? (req.user as AuthUser).id;
+  const userId = (req.user as AuthUser).id;
   await markAllRead(userId);
-  res.status(200).json({ message: 'All notifications marked as read.' });
+  okMessage(res, 'All notifications marked as read.');
 }
 
 async function unreadCountHandler(req: Request, res: Response): Promise<void> {
-  const userId = queryString(req.query.userId) || (req.user as AuthUser).id;
+  const userId = (req.user as AuthUser).id;
   const result = await unreadCount(userId);
   ok(res, result);
 }
@@ -68,7 +68,9 @@ export const notificationsRouter = Router();
 
 notificationsRouter.get('/notifications', requireAuth, list);
 notificationsRouter.post('/notifications', requireAuth, validateBody(createSchema), async (req, res) => {
-  const created = await createNotification(req.body);
+  const user = req.user as AuthUser;
+  const userId = user.role === 'admin' ? req.body.userId : user.id;
+  const created = await createNotification({ ...req.body, userId });
   ok(res, serialize(created.toObject() as unknown as Record<string, unknown>));
 });
 notificationsRouter.patch('/notifications/read-all', requireAuth, markAllReadHandler);

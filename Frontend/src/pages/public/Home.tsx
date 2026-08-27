@@ -4,6 +4,7 @@ import { Search, TrendingUp, ArrowRight, Sparkles, Target, Zap, Award } from 'lu
 
 import { useGetJobsQuery } from '@/features/jobs/jobsApi';
 import { useGetCompaniesQuery } from '@/features/companies/companiesApi';
+import { useAuth } from '@/context/AuthContext';
 import JobCard from '@/component/jobs/JobCard';
 
 // Background images for the hero slideshow
@@ -14,10 +15,11 @@ const HERO_IMAGES = [
 ];
 
 export default function Home() {
+  const { user } = useAuth();
   const [search, setSearch] = useState('');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  const { data: jobsData } = useGetJobsQuery({ limit: 6 });
+  const { data: jobsData, isLoading: jobsLoading, error: jobsError } = useGetJobsQuery({ limit: 6 });
   const featuredJobs = jobsData?.data ?? [];
   const { data: allCompanies = [] } = useGetCompaniesQuery();
   const companies = allCompanies.slice(0, 8);
@@ -46,7 +48,7 @@ export default function Home() {
 
   return (
     <div className="bg-white">
-      {/* Hero */}
+      {/* Hero Section */}
       <section className="relative pt-32 pb-20 overflow-hidden bg-slate-950 text-white min-h-[600px] flex items-center">
         {/* Changing Background Images */}
         {HERO_IMAGES.map((image, index) => (
@@ -61,7 +63,7 @@ export default function Home() {
 
         {/* Dark High-Contrast Overlays */}
         <div className="absolute inset-0 bg-gradient-to-b from-slate-950/90 via-slate-900/80 to-slate-950 pointer-events-none" />
-        <div 
+        <div
           className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[500px] pointer-events-none opacity-40"
           style={{
             background: 'radial-gradient(ellipse 60% 50% at 50% 0%, rgba(99, 102, 241, 0.4), transparent 70%)',
@@ -73,9 +75,9 @@ export default function Home() {
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-400/30 text-indigo-300 text-sm font-semibold mb-6 animate-fade-in backdrop-blur-md">
               <Sparkles className="w-4 h-4 text-indigo-400" /> Your career, forged for success
             </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-extrabold text-white leading-[1.1] tracking-tight animate-slide-up">
+            <h1 className="relative z-10 text-4xl sm:text-5xl lg:text-6xl font-display font-extrabold text-indigo-300! leading-[1.1] tracking-tight animate-slide-up">
               Find your dream job
-              <span className="block text-indigo-400 mt-2">at top companies</span>
+              <span className="block text-indigo-400! mt-2">at top companies</span>
             </h1>
             <p className="text-lg text-slate-300 mt-6 max-w-2xl mx-auto leading-relaxed animate-slide-up">
               Connect with thousands of employers, track your applications, and land the role you deserve. CareerForge makes job hunting effortless.
@@ -121,12 +123,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features */}
-      <section className="py-20 bg-slate-50/50">
+      {/* Why CareerForge? */}
+      <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-display font-bold text-slate-900">Why CareerForge?</h2>
-            <p className="text-slate-600 mt-3 max-w-xl mx-auto">Everything you need to find, apply, and land your next role.</p>
+            <p className="flex justify-center text-slate-600 mt-3 mx-auto">Everything you need to find, apply, and land your next role.</p>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -147,7 +149,7 @@ export default function Home() {
       </section>
 
       {/* Featured Jobs */}
-      {featuredJobs.length > 0 && (
+      {!jobsLoading && !jobsError && featuredJobs.length > 0 && (
         <section className="py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="flex items-end justify-between mb-8">
@@ -222,26 +224,66 @@ export default function Home() {
         <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-50/50 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-50/50 rounded-full blur-3xl pointer-events-none" />
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-3xl sm:text-4xl font-display font-bold text-slate-900">
-            Ready to forge your career?
-          </h2>
-          <p className="text-slate-600 mt-3 text-lg">
-            Join thousands of job seekers who found their dream role.
-          </p>
-          <div className="flex items-center justify-center gap-3 mt-8">
-            <Link
-              to="/auth/register"
-              className="inline-flex items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3.5 text-base font-bold transition-colors shadow-lg shadow-indigo-200"
-            >
-              Get Started Free
-            </Link>
-            <Link
-              to="/jobs"
-              className="inline-flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-900 px-8 py-3.5 text-base font-bold border border-slate-200 transition-colors"
-            >
-              Browse Jobs
-            </Link>
-          </div>
+          {user ? (
+            user.role === 'recruiter' ? (
+              <>
+                <h2 className="text-3xl sm:text-4xl font-display font-bold text-slate-900">
+                  Ready to find your next hire?
+                </h2>
+                <p className="text-slate-600 mt-3 text-lg">
+                  Post open roles and connect with top talent today.
+                </p>
+                <div className="flex items-center justify-center gap-3 mt-8">
+                  <Link
+                    to="/recruiter/create-job"
+                    className="inline-flex items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3.5 text-base font-bold transition-colors shadow-lg shadow-indigo-200"
+                  >
+                    Post a Job
+                  </Link>
+                </div>
+              </>
+            ) : (
+              <>
+                <h2 className="text-3xl sm:text-4xl font-display font-bold text-slate-900">
+                  Ready to land your dream role?
+                </h2>
+                <p className="text-slate-600 mt-3 text-lg">
+                  Browse the latest openings and apply in minutes.
+                </p>
+                <div className="flex items-center justify-center gap-3 mt-8">
+                  <Link
+                    to="/jobs"
+                    className="inline-flex items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3.5 text-base font-bold transition-colors shadow-lg shadow-indigo-200"
+                  >
+                    Browse Jobs
+                  </Link>
+                </div>
+              </>
+            )
+          ) : (
+            <>
+              <h2 className="text-3xl sm:text-4xl font-display font-bold text-slate-900">
+                Ready to forge your career?
+              </h2>
+              <p className="text-slate-600 mt-3 text-lg">
+                Join thousands of job seekers who found their dream role.
+              </p>
+              <div className="flex items-center justify-center gap-3 mt-8">
+                <Link
+                  to="/auth/register"
+                  className="inline-flex items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3.5 text-base font-bold transition-colors shadow-lg shadow-indigo-200"
+                >
+                  Get Started Free
+                </Link>
+                <Link
+                  to="/jobs"
+                  className="inline-flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-900 px-8 py-3.5 text-base font-bold border border-slate-200 transition-colors"
+                >
+                  Browse Jobs
+                </Link>
+              </div>
+            </>
+          )}
         </div>
       </section>
     </div>

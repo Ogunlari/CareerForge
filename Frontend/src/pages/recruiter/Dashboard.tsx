@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useGetMyJobsQuery } from '@/features/jobs/jobsApi';
 import { useGetRecruiterApplicationsQuery } from '@/features/applications/applicationsApi';
 import { useAuth } from '@/context/AuthContext';
@@ -8,7 +9,7 @@ const countByStatus = (statuses: (ApplicationStatus | undefined)[], targets: App
 
 export default function RecruiterDashboard() {
   const { user } = useAuth();
-  const { data: jobsData, isLoading: loading } = useGetMyJobsQuery({ limit: 5 });
+  const { data: jobsData, isLoading: loading, error: jobsError } = useGetMyJobsQuery({ limit: 5 });
   const {
     data: applications = [],
     isLoading: appsLoading,
@@ -24,9 +25,9 @@ export default function RecruiterDashboard() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        <a href="/recruiter/create-job" className="bg-blue-600 text-white px-6 py-2 rounded">
+        <Link to="/recruiter/create-job" className="bg-blue-600 text-white px-6 py-2 rounded">
           Post New Job
-        </a>
+        </Link>
       </div>
 
       {/* Stats Cards */}
@@ -52,7 +53,9 @@ export default function RecruiterDashboard() {
       {/* Recent Jobs */}
       <div className="bg-white rounded shadow p-6">
         <h2 className="text-xl font-bold mb-4">Recent Jobs</h2>
-        {loading ? (
+        {jobsError ? (
+          <p className="text-red-600">Failed to load jobs. Please try again.</p>
+        ) : loading ? (
           <p className="text-gray-600">Loading...</p>
         ) : jobs.length === 0 ? (
           <p className="text-gray-600">No jobs posted yet</p>

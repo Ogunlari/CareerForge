@@ -55,6 +55,8 @@ const userSchema = new Schema(
 );
 
 userSchema.index({ email: 1 }, { unique: true });
+userSchema.index({ role: 1 });
+userSchema.index({ is_blocked: 1 });
 
 export type User = InferSchemaType<typeof userSchema>;
 export type UserDocument = HydratedDocument<User>;

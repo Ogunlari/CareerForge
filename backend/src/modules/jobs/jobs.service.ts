@@ -59,7 +59,7 @@ export async function getJobById(id: string) {
 export async function getRecommendedJobs(studentId: string) {
   let studentSkills: string[] = [];
   if (studentId) {
-    const student = await UserModel.findById(studentId).select('skills location').lean().exec();
+    const student = await UserModel.findById(studentId).select('skills location').maxTimeMS(2000).lean().exec();
     if (student?.skills?.length) {
       studentSkills = student.skills.map((s: string) => s.toLowerCase());
     }
@@ -121,7 +121,7 @@ export async function createJob(user: AuthUser, input: CreateJobInput) {
     throw AppError.forbidden('Only recruiters can post jobs.');
   }
 
-  const recruiter = await UserModel.findById(user.id);
+  const recruiter = await UserModel.findById(user.id).maxTimeMS(2000);
   if (!recruiter?.company_id) {
     throw AppError.badRequest(
       'Your account has no linked company. Create one first (POST /companies), then link it via PATCH /profiles/:id.',
@@ -139,7 +139,7 @@ export async function createJob(user: AuthUser, input: CreateJobInput) {
 }
 
 export async function updateJob(user: AuthUser, jobId: string, updates: Record<string, unknown>) {
-  const job = await JobModel.findById(jobId);
+  const job = await JobModel.findById(jobId).maxTimeMS(2000);
   if (!job) throw AppError.notFound('Job not found.');
   assertCanManage({ recruiter_id: job.recruiter_id ? String(job.recruiter_id) : undefined }, user);
 
@@ -168,7 +168,7 @@ export async function updateJob(user: AuthUser, jobId: string, updates: Record<s
 }
 
 export async function deleteJob(user: AuthUser, jobId: string) {
-  const job = await JobModel.findById(jobId);
+  const job = await JobModel.findById(jobId).maxTimeMS(2000);
   if (!job) throw AppError.notFound('Job not found.');
   assertCanManage({ recruiter_id: job.recruiter_id ? String(job.recruiter_id) : undefined }, user);
   await job.deleteOne();

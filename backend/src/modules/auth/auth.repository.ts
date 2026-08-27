@@ -13,11 +13,11 @@ export function toPublicUser(user: UserDocument | Record<string, unknown>): Publ
 }
 
 export async function findUserByEmail(email: string): Promise<UserDocument | null> {
-  return UserModel.findOne({ email: email.toLowerCase() }) as Promise<UserDocument | null>;
+  return UserModel.findOne({ email: email.toLowerCase() }).maxTimeMS(2000) as Promise<UserDocument | null>;
 }
 
 export async function findUserById(id: string): Promise<UserDocument | null> {
-  return UserModel.findById(id) as Promise<UserDocument | null>;
+  return UserModel.findById(id).maxTimeMS(2000) as Promise<UserDocument | null>;
 }
 
 export async function insertUser(data: {

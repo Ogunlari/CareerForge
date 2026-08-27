@@ -18,6 +18,7 @@ export async function patchProfile(req: Request, res: Response): Promise<void> {
 }
 
 export async function getStudentProfile(req: Request, res: Response): Promise<void> {
-  const student = await service.getStudentProfile(param(req, 'studentId'));
+  const requester = req.user as AuthUser;
+  const student = await service.getStudentProfile(requester, param(req, 'studentId'));
   res.status(200).json(student);
 }

@@ -8,6 +8,7 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32),
   JWT_EXPIRES_IN: z.string().default('15m'),
   REFRESH_TOKEN_EXPIRES_IN: z.string().default('7d'),
+  APP_BASE_URL: z.string().default('http://localhost:5173'),
   CORS_ORIGIN: z.string().default('*'),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(15 * 60 * 1000),
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(300),
@@ -17,6 +18,8 @@ const envSchema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   MAIL_FROM: z.string().default('CareerForge <noreply@careerforge.dev>'),
+  SENDGRID_API_KEY: z.string().optional().default(''),
+  SENDGRID_FROM: z.string().email().optional().default(''),
   SENTRY_DSN: z.string().optional().default(''),
 });
 
@@ -32,7 +35,7 @@ if (!parsed.success) {
 
 export const env = parsed.data;
 
-if (env.NODE_ENV === 'production' && env.JWT_SECRET.includes('change-me')) {
+if (env.NODE_ENV === 'production' && (env.JWT_SECRET.includes('change-me') || env.JWT_SECRET.includes('dev-only'))) {
   console.error('Refusing to start: JWT_SECRET looks like a development placeholder.');
   process.exit(1);
 }

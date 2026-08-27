@@ -6,6 +6,7 @@ export default function Applicants() {
   const {
     data: applications = [],
     isLoading: loading,
+    error,
   } = useGetRecruiterApplicationsQuery(user?.id ?? '', { skip: !user });
 
   return (
@@ -24,7 +25,13 @@ export default function Applicants() {
             </tr>
           </thead>
           <tbody>
-            {loading ? (
+            {error ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-4 text-center text-red-600">
+                  Failed to load applicants. Please try again.
+                </td>
+              </tr>
+            ) : loading ? (
               <tr>
                 <td colSpan={5} className="px-6 py-4 text-center text-gray-600">
                   Loading...

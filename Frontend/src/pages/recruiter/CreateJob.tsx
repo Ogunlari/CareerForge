@@ -41,8 +41,6 @@ export default function CreateJob() {
     }
   };
 
-  const toNumber = (value: string) => (value === '' ? undefined : Number(value));
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);

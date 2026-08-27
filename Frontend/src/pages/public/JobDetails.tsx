@@ -133,7 +133,7 @@ export default function JobDetails() {
                     {job.location && <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {job.location}</span>}
                     {jobType && <span className="flex items-center gap-1"><Briefcase className="w-4 h-4" /> {jobType.label}</span>}
                     {expLevel && <span className="flex items-center gap-1"><Users className="w-4 h-4" /> {expLevel.label}</span>}
-                    <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> {getRelativeTime(job.created_at)}</span>
+                    <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> {getRelativeTime(job.posted_at || job.created_at)}</span>
                   </div>
                 </div>
               </div>
@@ -208,7 +208,7 @@ export default function JobDetails() {
                 </div>
                 <div className="border-t border-slate-100 pt-4">
                   <p className="text-xs text-slate-400 uppercase font-semibold tracking-wide">Posted</p>
-                  <p className="text-sm font-semibold text-slate-700 mt-1">{formatDate(job.created_at, 'long')}</p>
+                  <p className="text-sm font-semibold text-slate-700 mt-1">{formatDate(job.posted_at || job.created_at, 'long')}</p>
                 </div>
                 <div className="border-t border-slate-100 pt-4">
                   <p className="text-xs text-slate-400 uppercase font-semibold tracking-wide">Applicants</p>

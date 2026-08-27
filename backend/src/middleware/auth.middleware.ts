@@ -32,16 +32,16 @@ export function requireAuth(req: Request, _res: Response, next: NextFunction): v
   }
 
   SessionModel.findOne({ access_token_jti: jti, revoked_at: { $exists: false } })
+    .maxTimeMS(2000)
     .lean()
     .then((session) => {
       if (!session) {
         next(AppError.unauthorized('Session has been revoked.'));
         return;
       }
-      // Re-check account state on every request so blocking/deletion takes effect
-      // immediately instead of waiting for token expiry.
       return UserModel.findById(payload.id)
         .select('is_blocked')
+        .maxTimeMS(2000)
         .lean()
         .then((doc) => {
           if (!doc) {

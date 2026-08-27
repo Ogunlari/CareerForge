@@ -12,16 +12,15 @@ function stripPrivate(user: { toObject?: () => Record<string, unknown> }) {
 export async function getProfile(requester: AuthUser, profileId: string) {
   const user = await findProfileById(profileId);
 
-  if (requester.role !== 'admin' && requester.id !== String(user._id)) {
-    // Profiles are semi-public within the product; students may be viewed by recruiters who
-    // received an application. For the bootstrap we allow same-role reads and document the
-    // tightening step in docs/API_CONTRACT.md.
-    if (requester.role !== user.role && requester.role !== 'recruiter') {
-      throw AppError.forbidden('You cannot view this profile.');
-    }
+  if (requester.id === String(user._id) || requester.role === 'admin') {
+    return stripPrivate(user);
   }
 
-  return stripPrivate(user);
+  if (requester.role === 'recruiter' && user.role === 'student') {
+    return stripPrivate(user);
+  }
+
+  throw AppError.forbidden('You cannot view this profile.');
 }
 
 export async function patchProfile(requester: AuthUser, profileId: string, updates: Record<string, unknown>) {
@@ -33,10 +32,13 @@ export async function patchProfile(requester: AuthUser, profileId: string, updat
   return stripPrivate(updated);
 }
 
-export async function getStudentProfile(studentId: string) {
+export async function getStudentProfile(requester: AuthUser, studentId: string) {
   const user = await findProfileById(studentId);
   if (user.role !== 'student') {
     throw AppError.notFound('Student not found.');
   }
-  return stripPrivate(user);
+  if (requester.id === String(user._id) || requester.role === 'admin' || requester.role === 'recruiter') {
+    return stripPrivate(user);
+  }
+  throw AppError.forbidden('You cannot view this profile.');
 }

@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { createHash, randomBytes } from 'node:crypto';
-import { isProduction } from '../../config/env.js';
+import { env, isProduction } from '../../config/env.js';
 import { PasswordResetTokenModel } from '../../models/password-reset-token.model.js';
 import { SessionModel } from '../../models/session.model.js';
 import { UserModel } from '../../models/user.model.js';
@@ -60,7 +60,7 @@ async function createSession(
     expires_at: new Date(Date.now() + REFRESH_TOKEN_TTL_MS),
   });
 
-  const user = await UserModel.findById(userId).lean().exec();
+  const user = await UserModel.findById(userId).lean().maxTimeMS(2000).exec();
   const role = user?.role || 'student';
   const accessToken = signAccessToken({ id: userId, role }, jti);
 
@@ -116,7 +116,7 @@ export async function refreshSession(
   meta?: { userAgent?: string; ipAddress?: string },
 ): Promise<AuthResult> {
   const tokenHash = hashToken(refreshToken);
-  const session = await SessionModel.findOne({ refresh_token_hash: tokenHash });
+  const session = await SessionModel.findOne({ refresh_token_hash: tokenHash }).maxTimeMS(2000);
 
   if (!session) throw new AppError('INVALID_REFRESH_TOKEN', 401, 'Invalid or expired refresh token.');
 
@@ -139,7 +139,7 @@ export async function refreshSession(
   }
 
   // Check the user still exists and is not blocked.
-  const user = await UserModel.findById(session.user_id).lean().exec();
+  const user = await UserModel.findById(session.user_id).lean().maxTimeMS(2000).exec();
   if (!user) throw new AppError('INVALID_REFRESH_TOKEN', 401, 'Account no longer exists.');
   if (user.is_blocked) throw new AppError('ACCOUNT_BLOCKED', 403, 'This account has been suspended. Contact support.');
 
@@ -189,6 +189,7 @@ export async function listSessions(userId: string, currentJti: string): Promise<
     expires_at: { $gt: new Date() },
   })
     .sort({ created_at: -1 })
+    .maxTimeMS(2000)
     .lean()
     .exec();
 
@@ -231,7 +232,7 @@ export async function requestPasswordReset(email: string): Promise<{ devResetTok
       expires_at: new Date(Date.now() + RESET_TOKEN_TTL_MS),
     });
 
-    const resetUrl = `${isProduction ? 'https' : 'http'}://localhost:5000/auth/reset-password?token=${rawToken}`;
+    const resetUrl = `${env.APP_BASE_URL}/auth/reset-password?token=${rawToken}`;
     const html = `
       <h2>Password Reset Request</h2>
       <p>Click the link below to reset your password. This link expires in 1 hour.</p>
@@ -254,14 +255,14 @@ export async function requestPasswordReset(email: string): Promise<{ devResetTok
 
 export async function completePasswordReset(rawToken: string, newPassword: string): Promise<void> {
   const token_hash = createHash('sha256').update(rawToken).digest('hex');
-  const record = await PasswordResetTokenModel.findOne({ token_hash });
+  const record = await PasswordResetTokenModel.findOne({ token_hash }).maxTimeMS(2000);
 
   if (!record || record.used_at || record.expires_at.getTime() < Date.now()) {
     throw new AppError('INVALID_RESET_TOKEN', 400, 'This reset link is invalid or has expired. Please request a new one.');
   }
 
   const password_hash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
-  const user = await UserModel.findByIdAndUpdate(record.user_id, { password_hash });
+  const user = await UserModel.findByIdAndUpdate(record.user_id, { password_hash }).maxTimeMS(2000);
   if (!user) {
     throw new AppError('INVALID_RESET_TOKEN', 400, 'This reset link is invalid or has expired. Please request a new one.');
   }
@@ -275,7 +276,7 @@ export async function completePasswordReset(rawToken: string, newPassword: strin
 
 export async function updatePassword(userId: string, newPassword: string): Promise<PublicUser> {
   const password_hash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
-  const user = await UserModel.findByIdAndUpdate(userId, { password_hash }, { new: true });
+  const user = await UserModel.findByIdAndUpdate(userId, { password_hash }, { new: true }).maxTimeMS(2000);
   if (!user) throw AppError.unauthorized();
 
   // Invalidate all sessions except the current one (caller should pass their jti).

@@ -39,17 +39,19 @@ async function create(req: Request, res: Response): Promise<void> {
   const data = companySchema.parse(req.body);
   const user = req.user as AuthUser | undefined;
   const company = await createCompany(data, user);
-  res.status(201).json({ data: company });
+  ok(res, company, 201);
 }
 
 async function update(req: Request, res: Response): Promise<void> {
+  const user = req.user as AuthUser;
   const updates = companySchema.partial().parse(req.body);
-  const company = await updateCompany(param(req, 'companyId'), updates);
+  const company = await updateCompany(param(req, 'companyId'), updates, user);
   ok(res, company);
 }
 
 async function remove(req: Request, res: Response): Promise<void> {
-  await deleteCompany(param(req, 'companyId'));
+  const user = req.user as AuthUser;
+  await deleteCompany(param(req, 'companyId'), user);
   res.status(204).send();
 }
 
@@ -65,4 +67,4 @@ companiesRouter.patch(
   validateBody(companySchema.partial()),
   update,
 );
-companiesRouter.delete('/companies/:companyId', requireAuth, requireRole('admin'), remove);
+companiesRouter.delete('/companies/:companyId', requireAuth, requireRole('recruiter', 'admin'), remove);

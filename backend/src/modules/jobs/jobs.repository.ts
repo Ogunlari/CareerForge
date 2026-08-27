@@ -36,16 +36,17 @@ export async function searchJobs(filter: FilterQuery<Job>, page: number, limit: 
       .skip((page - 1) * limit)
       .limit(limit)
       .populate<{ company_id: unknown }>(POPULATE_COMPANY)
+      .maxTimeMS(5000)
       .exec()
   );
 }
 
 export async function countJobs(filter: FilterQuery<Job>): Promise<number> {
-  return JobModel.countDocuments(filter);
+  return JobModel.countDocuments(filter).maxTimeMS(3000);
 }
 
 export async function findJobById(id: string) {
-  return JobModel.findById(id).populate(POPULATE_COMPANY);
+  return JobModel.findById(id).populate(POPULATE_COMPANY).maxTimeMS(2000);
 }
 
 export async function findActiveJobsForRecommendation(limit: number) {
@@ -54,6 +55,7 @@ export async function findActiveJobsForRecommendation(limit: number) {
     .limit(limit)
     .select('title description tags requirements experience_level location posted_at company_id recruiter_id')
     .populate<{ company_id: unknown }>(POPULATE_COMPANY)
+    .maxTimeMS(5000)
     .exec();
 }
 
@@ -72,8 +74,9 @@ export async function findByRecruiter(
       .skip((page - 1) * limit)
       .limit(limit)
       .populate<{ company_id: unknown }>(POPULATE_COMPANY)
+      .maxTimeMS(5000)
       .exec(),
-    JobModel.countDocuments(filter),
+    JobModel.countDocuments(filter).maxTimeMS(3000),
   ]);
 
   return { jobs, total };

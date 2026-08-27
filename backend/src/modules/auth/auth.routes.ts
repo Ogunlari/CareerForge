@@ -26,7 +26,7 @@ export const authRouter = Router();
 
 authRouter.post('/signup', authLimiter, validateBody(signupSchema), controller.signup);
 authRouter.post('/login', authLimiter, validateBody(loginSchema), controller.login);
-authRouter.post('/refresh', validateBody(refreshSchema), controller.refresh);
+authRouter.post('/refresh', authLimiter, validateBody(refreshSchema), controller.refresh);
 authRouter.post('/logout', requireAuth, controller.logout);
 authRouter.get('/me', requireAuth, controller.me);
 authRouter.post(

@@ -23,26 +23,26 @@ export async function markRead(notificationId: string, userId: string) {
   const result = await NotificationModel.updateOne(
     { _id: notificationId, user_id: userId },
     { $set: { is_read: true } },
-  );
+  ).maxTimeMS(2000);
   if (result.modifiedCount === 0) {
     throw AppError.notFound('Notification not found.');
   }
 }
 
 export async function markAllRead(userId: string) {
-  await NotificationModel.updateMany({ user_id: userId }, { $set: { is_read: true } });
+  await NotificationModel.updateMany({ user_id: userId }, { $set: { is_read: true } }).maxTimeMS(2000);
 }
 
 export async function unreadCount(userId: string) {
   const count = await NotificationModel.countDocuments({
     user_id: userId,
     is_read: false,
-  });
+  }).maxTimeMS(2000);
   return { count };
 }
 
 export async function deleteNotification(notificationId: string, userId: string) {
-  const result = await NotificationModel.deleteOne({ _id: notificationId, user_id: userId });
+  const result = await NotificationModel.deleteOne({ _id: notificationId, user_id: userId }).maxTimeMS(2000);
   if (result.deletedCount === 0) {
     throw AppError.notFound('Notification not found.');
   }
