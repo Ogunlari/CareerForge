@@ -1,5 +1,6 @@
 import { AppError } from '../../utils/errors.js';
 import type { AuthUser } from '../../middleware/auth.types.js';
+import { CompanyModel } from '../../models/company.model.js';
 import { findProfileById, updateProfile } from './users.repository.js';
 
 function stripPrivate(user: { toObject?: () => Record<string, unknown> }) {
@@ -27,6 +28,17 @@ export async function patchProfile(requester: AuthUser, profileId: string, updat
   if (requester.id !== profileId && requester.role !== 'admin') {
     throw AppError.forbidden('You can only update your own profile.');
   }
+
+  if (updates.company_id !== undefined) {
+    if (requester.role !== 'recruiter' && requester.role !== 'admin') {
+      throw AppError.forbidden('Only recruiters can link a company to their profile.');
+    }
+    if (typeof updates.company_id === 'string' && updates.company_id.length > 0) {
+      const company = await CompanyModel.findById(updates.company_id).select('_id').maxTimeMS(2000);
+      if (!company) throw AppError.notFound('Company not found.');
+    }
+  }
+
   const updated = await updateProfile(profileId, updates);
   if (!updated) throw AppError.notFound('Profile not found.');
   return stripPrivate(updated);

@@ -83,3 +83,22 @@ Indexes: `{created_at desc}`, `{admin_id}`.
 
 user_id, token_hash (SHA-256 of raw token, unique), expires_at, used_at.
 TTL index auto-deletes expired tokens. Raw tokens are never stored.
+
+## file_records
+
+Immutable metadata for uploaded files (resumes).
+
+| Field | Type | Notes |
+|---|---|---|
+| owner_id | ObjectId → users | who uploaded |
+| storage_key | string | unique random key; also the on-disk filename in `UPLOAD_DIR` |
+| original_name | string | client filename, never used for path resolution |
+| mimetype | string | from MIME allowlist |
+| size | number | bytes |
+| sha256 | string | content hash; dedup within an owner |
+| scanned | boolean | placeholder — no AV scanner wired yet (playbook §11) |
+| created_at | date | |
+
+Indexes: `{storage_key}` unique · `{owner_id, created_at}` · `{sha256, owner_id}`.
+The stored file itself lives at `UPLOAD_DIR/<storage_key>`; the record is authoritative metadata.
+

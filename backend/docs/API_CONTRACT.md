@@ -57,7 +57,7 @@ is handled by `src/services/mail/` (dev console + Nodemailer SMTP).
 | Method & Path | Auth | Notes |
 |---|---|---|
 | GET `/profiles/:id` | Bearer | owner, admin, or recruiter may read |
-| PATCH `/profiles/:id` | Bearer | owner or admin only; allow-list of fields (`full_name, avatar, title, bio, phone, location, skills, education, experience, resume_url, position`) |
+| PATCH `/profiles/:id` | Bearer | owner or admin only; allow-list of fields (`full_name, avatar, title, bio, phone, location, skills, education, experience, resume_url, position, company_id`; `company_id` only settable by recruiters/admins and must reference an existing company) |
 | GET `/students/:studentId` | Bearer | 404 if target is not a student |
 
 ### Jobs — `/jobs`
@@ -138,3 +138,14 @@ Full CRUD. Read is public. Write requires recruiter/admin; delete requires admin
 
 - `GET /api/health/live` — always 200 if process is up.
 - `GET /api/health/ready` — 503 until MongoDB is reachable.
+
+### Files (resume uploads) — `/files`
+
+| Method & Path | Auth | Notes |
+|---|---|---|
+| POST `/files/resume` | Bearer | multipart field `file`; MIME allowlist (PDF / DOC / DOCX / plain text), max 5 MB. Returns `{data:{file_id, url, expires_at, duplicate}}` |
+| GET `/files/:storageKey?exp=&sig=` | none | serves the stored file if the HMAC signature is valid and unexpired; 403 on tamper/expiry, 404 if unknown |
+
+- Storage: disk under `UPLOAD_DIR` (default `uploads/`, gitignored — outside the app source).
+- URLs are signed with `FILE_URL_SIGNING_SECRET` and expire after `FILE_URL_TTL_MS` (default 15 min).
+- Immutable metadata is persisted in the `file_records` collection (owner, original name, mimetype, size, sha256, scanned flag).

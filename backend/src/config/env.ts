@@ -21,6 +21,9 @@ const envSchema = z.object({
   SENDGRID_API_KEY: z.string().optional().default(''),
   SENDGRID_FROM: z.string().email().optional().default(''),
   SENTRY_DSN: z.string().optional().default(''),
+  UPLOAD_DIR: z.string().default('uploads'),
+  FILE_URL_SIGNING_SECRET: z.string().min(32).default('change-me-file-url-signing-secret'),
+  FILE_URL_TTL_MS: z.coerce.number().int().positive().default(15 * 60 * 1000),
 });
 
 const parsed = envSchema.safeParse(process.env);

@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { ok, okList, okMessage, param, queryString } from '../../utils/http.js';
+import { ok, okMessage, param, queryString } from '../../utils/http.js';
 import type { AuthUser } from '../../middleware/auth.types.js';
 import { AppError } from '../../utils/errors.js';
 import * as service from './applications.service.js';

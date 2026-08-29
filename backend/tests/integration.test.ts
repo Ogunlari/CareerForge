@@ -25,6 +25,8 @@ interface TestUser {
 const users: Record<'student' | 'recruiterA' | 'recruiterB' | 'admin', TestUser> =
   {} as never;
 
+let recruiterACompanyId = '';
+
 const auth = (user: TestUser) => ({ Authorization: `Bearer ${user.accessToken}` });
 
 async function signupUser(
@@ -86,6 +88,7 @@ beforeAll(async () => {
     .set(auth(users.recruiterA))
     .send({ name: 'ACME Corp.' });
   expect(compRes.status).toBe(201);
+  recruiterACompanyId = compRes.body.data.id;
 });
 
 afterAll(async () => {
@@ -647,5 +650,81 @@ describe('admin endpoints', () => {
     expect(res.body.total).toBe(1);
     expect(res.body.data[0].title).toBe('Backend Engineer');
     expect(res.body.data[0].company.name).toBe('ACME Corp.');
+  });
+});
+
+describe('recruiter company linking', () => {
+  it('lets a recruiter link their profile to an existing company via PATCH profile', async () => {
+    const res = await request(app)
+      .patch(`/api/profiles/${users.recruiterB.id}`)
+      .set(auth(users.recruiterB))
+      .send({ company_id: recruiterACompanyId });
+    expect(res.status).toBe(200);
+    expect(String(res.body.data.company_id)).toBe(recruiterACompanyId);
+  });
+
+  it('rejects linking to a nonexistent company', async () => {
+    const res = await request(app)
+      .patch(`/api/profiles/${users.recruiterB.id}`)
+      .set(auth(users.recruiterB))
+      .send({ company_id: '000000000000000000000000' });
+    expect(res.status).toBe(404);
+  });
+
+  it('prevents a student from linking a company', async () => {
+    const res = await request(app)
+      .patch(`/api/profiles/${users.student.id}`)
+      .set(auth(users.student))
+      .send({ company_id: recruiterACompanyId });
+    expect(res.status).toBe(403);
+  });
+});
+
+describe('file uploads (resume)', () => {
+  const pdfBytes = Buffer.from('%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n%%EOF');
+
+  it('rejects an unsupported MIME type', async () => {
+    const res = await request(app)
+      .post('/api/files/resume')
+      .set(auth(users.student))
+      .attach('file', Buffer.from('not a resume'), {
+        filename: 'resume.exe',
+        contentType: 'application/x-msdownload',
+      });
+    expect(res.status).toBe(400);
+  });
+
+  it('uploads a resume and returns a signed URL', async () => {
+    const res = await request(app)
+      .post('/api/files/resume')
+      .set(auth(users.student))
+      .attach('file', pdfBytes, { filename: 'resume.pdf', contentType: 'application/pdf' });
+    expect(res.status).toBe(201);
+    expect(res.body.data.url).toMatch(/^\/api\/files\/[a-z0-9]+-[0-9a-f]{32}\?exp=\d+&sig=[0-9a-f]{64}$/);
+    expect(res.body.data.duplicate).toBe(false);
+    expect(res.body.data.expires_at).toBeDefined();
+
+    const served = await request(app).get(res.body.data.url);
+    expect(served.status).toBe(200);
+    expect(served.headers['content-type']).toBe('application/pdf');
+    expect(served.body).not.toBeUndefined();
+  });
+
+  it('rejects a signed URL with a tampered signature', async () => {
+    const res = await request(app)
+      .post('/api/files/resume')
+      .set(auth(users.student))
+      .attach('file', pdfBytes, { filename: 'resume.pdf', contentType: 'application/pdf' });
+    expect(res.status).toBe(201);
+    const tampered = res.body.data.url.replace(/sig=[0-9a-f]{64}/, `sig=${'0'.repeat(64)}`);
+    const served = await request(app).get(tampered);
+    expect(served.status).toBe(403);
+  });
+
+  it('requires auth to upload', async () => {
+    const res = await request(app)
+      .post('/api/files/resume')
+      .attach('file', pdfBytes, { filename: 'resume.pdf', contentType: 'application/pdf' });
+    expect(res.status).toBe(401);
   });
 });

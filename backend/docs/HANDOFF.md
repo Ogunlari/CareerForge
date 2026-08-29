@@ -17,10 +17,15 @@ Verified end-to-end against a live MongoDB:
 - admin platform stats (`/admin/stats`) and cross-company job search (`/admin/jobs`)
 - mail adapter (dev console + Nodemailer SMTP), auto-link recruiter to company on create
 - refresh token rotation with session revocation, token-family reuse detection
-- **25 passing integration tests** (`npm test`, vitest + supertest + mongodb-memory-server) covering
+- **file uploads**: resume upload (PDF/DOC/DOCX/txt, 5 MB max, MIME allowlist) stored outside the app
+  source in `UPLOAD_DIR` with immutable `FileRecord` metadata (sha256, mimetype, size, owner), signed
+  time-limited download URLs (HMAC), tamper/expiry rejected
+- recruiter can link their profile to any existing company via `PATCH /profiles/:id {company_id}`
+  (validated against an existing company, students forbidden)
+- **34 passing integration tests** (`npm test`, vitest + supertest + mongodb-memory-server) covering
   auth, dual-token flow, refresh rotation, reuse detection, password-reset + session invalidation,
-  job ownership, application state machine, withdraw/re-apply, blocking with audit trail, and
-  every authorization boundary
+  job ownership, application state machine, withdraw/re-apply, blocking with audit trail, every
+  authorization boundary, recruiter company linking, and the file-upload/signed-URL lifecycle
 
 ## Run it
 
@@ -66,8 +71,11 @@ npm run typecheck && npm run lint && npm test    # all green at handoff
    Full company creation flow added.
 8. ~~**Security.tsx** — pure placeholder.~~ **Done:** Session listing/revocation now wired via
    `useGetSessionsQuery`, `useRevokeSessionMutation`, `useLogoutAllMutation`.
-9. **File uploads** — resume is a URL string today. If you accept uploads, follow playbook §11
-   (size limits, MIME allowlist, signed URLs, scanning).
+9. ~~**File uploads** — resume is a URL string today. If you accept uploads, follow playbook §11~~ **Done:**
+   `POST /api/files/resume` (multipart, MIME allowlist, 5 MB limit) → `{file_id, url, expires_at}`;
+   disk storage in `UPLOAD_DIR` with immutable `FileRecord` metadata and HMAC-signed time-limited
+   download URLs served by `GET /api/files/:storageKey?exp=&sig=`. `scanned` field is set but no AV
+   scanner is wired — plug one in before exposing files in production (playbook §11).
 10. **Code splitting** — React.lazy per route group in `AppRoutes.tsx`, manualChunks in `vite.config.ts`.
 11. **Sentry integration** — added for both backend and frontend error tracking.
 12. **CI/CD pipeline** — GitHub Actions workflow at `.github/workflows/ci.yml`.
@@ -86,11 +94,8 @@ npm run typecheck && npm run lint && npm test    # all green at handoff
   invite endpoint later.
 - **`PATCH /profiles/:id` has an allow-list** — new profile fields must be added to
   `users.repository.ts` AND `users.schemas.ts`.
-- **The recruiter must link a company before posting a job** (`POST /companies` then
-  `PATCH /profiles/:id {company_id}`... note: linking company_id via profile PATCH is *not* wired —
-  see next bullet).
-- **Known gap:** recruiters have no endpoint to link themselves to a company yet. Either allow
-  `company_id` in the profile PATCH allow-list for recruiters, or auto-create/link on company create.
+- **The recruiter must link a company before posting a job** (`POST /companies` auto-links on create;
+  or `PATCH /profiles/:id {company_id}` to link to an existing company).
 - **Session model** — `src/models/session.model.ts` stores refresh tokens. Expired sessions are
   auto-purged by MongoDB TTL index (`expires_at`). Revoked sessions linger until expiry.
 - **`requireAuth` is async** — it returns a promise via `.then()/.catch(next)`. Express 4 does not

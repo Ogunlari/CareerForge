@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/node';
 import type { NextFunction, Request, Response } from 'express';
 import mongoose from 'mongoose';
+import multer from 'multer';
 import { AppError, ErrorCodes } from '../utils/errors.js';
 import { logger } from '../utils/logger.js';
 
@@ -13,6 +14,17 @@ export function notFoundHandler(req: Request, res: Response): void {
 
 export function errorHandler(err: unknown, req: Request, res: Response, _next: NextFunction): void {
   const requestId = res.locals.requestId ?? req.headers['x-request-id'] ?? undefined;
+
+  if (err instanceof multer.MulterError) {
+    const tooLarge = err.code === 'LIMIT_FILE_SIZE';
+    const status = tooLarge ? 413 : 400;
+    const message = tooLarge
+      ? 'File too large. Maximum size is 5 MB.'
+      : `Upload error: ${err.message}`;
+    logger.warn(message, { code: ErrorCodes.VALIDATION_ERROR, path: req.originalUrl });
+    res.status(status).json({ code: ErrorCodes.VALIDATION_ERROR, message, requestId });
+    return;
+  }
 
   if (err instanceof AppError) {
     logger.warn(err.message, { code: err.code, path: req.originalUrl });

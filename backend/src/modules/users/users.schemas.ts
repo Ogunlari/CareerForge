@@ -35,6 +35,7 @@ export const updateProfileSchema = z
     experience: z.array(experienceItem).max(30).optional(),
     resume_url: z.string().url().max(500).optional(),
     position: z.string().max(120).optional(),
+    company_id: z.string().min(1).max(120).optional(),
   })
   .strict();
 

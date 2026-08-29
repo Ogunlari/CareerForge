@@ -20,6 +20,7 @@ export async function updateProfile(id: string, updates: Record<string, unknown>
     'experience',
     'resume_url',
     'position',
+    'company_id',
   ];
 
   const $set: Record<string, unknown> = {};
