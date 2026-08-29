@@ -44,7 +44,7 @@ export default function ForgotPassword() {
               </div>
               <h1 className="text-2xl font-display font-bold text-slate-900 mt-4">Check your email</h1>
               <p className="text-slate-500 mt-2 text-sm">We've sent a password reset link to <span className="font-semibold text-slate-700">{email}</span></p>
-              {devResetToken && (
+              {import.meta.env.DEV && devResetToken && (
                 <div className="mt-4 p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-500">
                   <p className="font-semibold text-slate-600">Dev mode — mailer not configured</p>
                   <Link
