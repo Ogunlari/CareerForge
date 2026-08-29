@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Mail, MapPin, Clock, Send, CheckCircle2, AlertCircle } from 'lucide-react';
+import { API_BASE } from '@/features/api/baseApi';
 
 const contactMethods = [
   {
@@ -40,27 +41,35 @@ export default function Contact() {
     }
     setStatus('sending');
     try {
-      // Contact messages are currently handled manually. This endpoint future-proofs the form.
-      await new Promise((r) => setTimeout(r, 600));
+      const res = await fetch(`${API_BASE}/contact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.message || 'Failed to send message.');
+      }
       setStatus('success');
       setForm({ name: '', email: '', subject: '', message: '' });
-    } catch {
+    } catch (err) {
       setStatus('error');
-      setError('Something went wrong sending your message. Please try again or email support@careerforge.com directly.');
+      setError(err instanceof Error ? err.message : 'Something went wrong sending your message. Please try again or email support@careerforge.com directly.');
     }
   };
 
   return (
     <div>
-      <section className="bg-gradient-to-br from-primary-600 to-primary-800 text-white">
+      <section className="bg-slate-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 text-center">
           <div className="inline-flex items-center gap-2 text-primary-100 bg-white/10 rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wide mb-4">
             <Mail className="w-4 h-4" /> Contact Us
           </div>
-          <h1 className="text-4xl sm:text-5xl font-display font-bold">We're here to help</h1>
-          <p className="mt-4 max-w-2xl mx-auto text-primary-100 text-lg">
-            Questions about your account, a job posting, or your application? Reach out — we'd love to hear from you.
+          <h1 className="text-4xl sm:text-5xl font-display font-bold text-white">We're here to help</h1>
+          <p className="flex justify-center mt-4  mx-auto text-primary-100 text-lg">
+            Questions about your account, a job posting, or your application? 
           </p>
+            <p>Reach out — we'd love to hear from you. </p>
         </div>
       </section>
 

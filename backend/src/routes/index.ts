@@ -9,6 +9,7 @@ import { companiesRouter } from '../modules/companies/companies.routes.js';
 import { notificationsRouter } from '../modules/notifications/notifications.routes.js';
 import { adminRouter } from '../modules/admin/admin.routes.js';
 import { filesRouter } from '../modules/files/files.routes.js';
+import { contactRouter } from '../modules/contact/contact.routes.js';
 
 const apiRouter = Router();
 
@@ -22,6 +23,7 @@ apiRouter.use(companiesRouter);
 apiRouter.use(notificationsRouter);
 apiRouter.use(adminRouter);
 apiRouter.use(filesRouter);
+apiRouter.use(contactRouter);
 
 export const rootRouter = Router();
 rootRouter.use('/api', apiRouter);

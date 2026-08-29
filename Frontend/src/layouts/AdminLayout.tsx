@@ -9,6 +9,7 @@ const links = [
   { to: '/admin/jobs', label: 'Jobs' },
   { to: '/admin/reports', label: 'Reports' },
   { to: '/admin/audit-logs', label: 'Audit Logs' },
+  { to: '/admin/feedback', label: 'Feedback' },
   { to: '/admin/security', label: 'Security' },
 ];
 

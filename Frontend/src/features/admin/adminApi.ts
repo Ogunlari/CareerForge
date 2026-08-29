@@ -21,6 +21,16 @@ export interface AdminJobsParams {
   limit?: number;
 }
 
+export interface ContactMessage {
+  id: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  status: 'new' | 'read';
+  created_at?: string;
+}
+
 export const adminApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getAdminUsers: builder.query<Profile[], string | void>({
@@ -86,6 +96,20 @@ export const adminApi = baseApi.injectEndpoints({
     getHealthStatus: builder.query<{ status: string }, void>({
       query: () => '/health/ready',
     }),
+
+    getContactMessages: builder.query<Paginated<ContactMessage>, number | void>({
+      query: (page) => `/contact?page=${page ?? 1}`,
+      transformResponse: (raw: Paginated<{ _id?: string; id?: string } & ContactMessage>) => ({
+        ...raw,
+        data: raw.data.map((m) => ({ ...m, id: String(m._id ?? m.id) })),
+      }),
+      providesTags: ['ContactMessage'],
+    }),
+
+    markContactRead: builder.mutation<{ message: string }, string>({
+      query: (contactId) => ({ url: `/contact/${contactId}/read`, method: 'PATCH' }),
+      invalidatesTags: ['ContactMessage'],
+    }),
   }),
 });
 
@@ -100,4 +124,6 @@ export const {
   useGetAdminStatsQuery,
   useGetAdminJobsQuery,
   useGetHealthStatusQuery,
+  useGetContactMessagesQuery,
+  useMarkContactReadMutation,
 } = adminApi;

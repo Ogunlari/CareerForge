@@ -33,13 +33,13 @@ const stats = [
 export default function About() {
   return (
     <div>
-      <section className="bg-gradient-to-br from-primary-600 to-primary-800 text-white">
+      <section className="bg-slate-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 text-center">
           <div className="inline-flex items-center gap-2 text-primary-100 bg-white/10 rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wide mb-4">
             <Rocket className="w-4 h-4" /> About CareerForge
           </div>
-          <h1 className="text-4xl sm:text-5xl font-display font-bold">Everyone deserves a better career</h1>
-          <p className="mt-4 max-w-2xl mx-auto text-primary-100 text-lg">
+          <h1 className="text-4xl sm:text-5xl font-display font-bold text-white">Everyone deserves a better career</h1>
+          <p className="flex justify-center mt-4  mx-auto text-primary-100 text-lg">
             CareerForge is a one-stop platform that helps talented people find meaningful work and helps companies build world-class teams.
           </p>
         </div>
@@ -78,15 +78,13 @@ export default function About() {
         </div>
       </section>
 
-      <section className="bg-slate-900 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14 text-center">
-          <Shield className="w-10 h-10 text-primary-400 mx-auto mb-4" />
-          <h2 className="text-3xl font-display font-bold">Ready to take the next step in your career?</h2>
-          <p className="mt-3 text-slate-400">Join CareerForge today and turn your skills into opportunity.</p>
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Link to="/auth/register" className="btn-primary inline-flex px-6">Get Started</Link>
-            <Link to="/jobs" className="btn-secondary inline-flex px-6">Browse Jobs</Link>
-          </div>
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-14 text-center">
+        <Shield className="w-10 h-10 text-primary-400 mx-auto mb-4" />
+        <h2 className="text-3xl font-display font-bold text-slate-900">Ready to take the next step in your career?</h2>
+        <p className="mt-3 text-slate-600">Join CareerForge today and turn your skills into opportunity.</p>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <Link to="/auth/register" className="btn-primary inline-flex px-6">Get Started</Link>
+          <Link to="/jobs" className="btn-secondary inline-flex px-6">Browse Jobs</Link>
         </div>
       </section>
     </div>

@@ -50,6 +50,7 @@ const ManageCompanies = lazy(() => import('@/pages/admin/Companies'));
 const ManageJobsAdmin = lazy(() => import('@/pages/admin/Jobs'));
 const Reports = lazy(() => import('@/pages/admin/Reports'));
 const AuditLogs = lazy(() => import('@/pages/admin/AuditLogs'));
+const Feedback = lazy(() => import('@/pages/admin/Feedback'));
 const Security = lazy(() => import('@/pages/admin/Security'));
 
 function SuspenseWrapper({ children }: { children: React.ReactNode }) {
@@ -149,6 +150,7 @@ const adminRoutes: RouteObject[] = [
               { path: 'jobs', element: <SuspenseWrapper><ManageJobsAdmin /></SuspenseWrapper> },
               { path: 'reports', element: <SuspenseWrapper><Reports /></SuspenseWrapper> },
               { path: 'audit-logs', element: <SuspenseWrapper><AuditLogs /></SuspenseWrapper> },
+              { path: 'feedback', element: <SuspenseWrapper><Feedback /></SuspenseWrapper> },
               { path: 'security', element: <SuspenseWrapper><Security /></SuspenseWrapper> },
             ],
           },

@@ -16,7 +16,15 @@ const sections = [
   },
   {
     title: '4. Your Data & Choices',
-    body: 'You can review and update most of your profile information at any time from your profile settings. If you would like to access, correct, or delete the personal data we hold about you, or close your account, please contact us at support@careerforge.com and we will process your request in accordance with applicable law.',
+    body: (
+      <>
+        You can review and update most of your profile information at any time from your profile settings. If you
+        would like to access, correct, or delete the personal data we hold about you, or close your account, please
+        contact us at{' '}
+        <a href="mailto:support@careerforge.com" className="text-primary-600 hover:text-primary-700 font-semibold">support@careerforge.com</a>{' '}
+        and we will process your request in accordance with applicable law.
+      </>
+    ),
   },
   {
     title: '5. Data Security',
