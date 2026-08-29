@@ -71,6 +71,7 @@ export interface Experience {
 }
 
 export interface ExperienceItem {
+  id: string;
   title: string;
   company: string;
   start_date: string;
@@ -80,6 +81,7 @@ export interface ExperienceItem {
 }
 
 export interface EducationItem {
+  id: string;
   institution: string;
   degree: string;
   field: string;

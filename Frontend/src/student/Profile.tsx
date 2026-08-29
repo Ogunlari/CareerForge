@@ -32,11 +32,11 @@ export default function StudentProfile() {
   };
 
   const addExperience = () => {
-    setExperience([...experience, { title: '', company: '', start_date: '', end_date: null, description: '', current: false }]);
+    setExperience([...experience, { id: crypto.randomUUID(), title: '', company: '', start_date: '', end_date: null, description: '', current: false }]);
   };
 
   const addEducation = () => {
-    setEducation([...education, { institution: '', degree: '', field: '', start_date: '', end_date: null, current: false }]);
+    setEducation([...education, { id: crypto.randomUUID(), institution: '', degree: '', field: '', start_date: '', end_date: null, current: false }]);
   };
 
   const handleSave = async () => {

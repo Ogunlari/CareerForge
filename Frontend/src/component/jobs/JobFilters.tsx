@@ -11,16 +11,23 @@ interface JobFiltersProps {
   location: string;
   setLocation: (v: string) => void;
   onReset: () => void;
+  onApply: () => void;
 }
 
 export default function JobFilters({
   search, setSearch, jobType, setJobType,
-  experienceLevel, setExperienceLevel, location, setLocation, onReset,
+  experienceLevel, setExperienceLevel, location, setLocation, onReset, onApply,
 }: JobFiltersProps) {
   const hasFilters = search || jobType || experienceLevel || location;
 
   return (
-    <div className="card p-5 space-y-4">
+    <form
+      className="card p-5 space-y-4"
+      onSubmit={(e) => {
+        e.preventDefault();
+        onApply();
+      }}
+    >
       <div className="flex items-center justify-between">
         <h3 className="font-bold text-slate-900 flex items-center gap-2">
           <Search className="w-4 h-4 text-primary-500" /> Filters
@@ -83,6 +90,13 @@ export default function JobFilters({
           ))}
         </select>
       </div>
-    </div>
+
+      <button
+        type="submit"
+        className="btn-primary w-full flex items-center justify-center gap-2"
+      >
+        <Search className="w-4 h-4" /> Search Jobs
+      </button>
+    </form>
   );
 }

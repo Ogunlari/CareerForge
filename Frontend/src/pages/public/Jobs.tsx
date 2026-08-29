@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { SlidersHorizontal, X } from 'lucide-react';
 import { useGetJobsQuery } from '@/features/jobs/jobsApi';
@@ -19,11 +19,18 @@ export default function Jobs() {
 
   const [currentPage, setCurrentPage] = useState(1);
 
+  const [applied, setApplied] = useState({
+    search: searchParams.get('search') || '',
+    job_type: '' as string,
+    experience_level: '',
+    location: '',
+  });
+
   const { data, isLoading, error } = useGetJobsQuery({
-    search: search || undefined,
-    job_type: (jobType as JobType) || undefined,
-    experience_level: experienceLevel || undefined,
-    location: location || undefined,
+    search: applied.search || undefined,
+    job_type: (applied.job_type as JobType) || undefined,
+    experience_level: applied.experience_level || undefined,
+    location: applied.location || undefined,
     page: currentPage,
     limit: PAGE_SIZE,
   });
@@ -32,16 +39,20 @@ export default function Jobs() {
   const total = typeof data?.total === 'number' ? data.total : jobs.length;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  useEffect(() => {
+  const handleApply = () => {
+    setApplied({ search, job_type: jobType, experience_level: experienceLevel, location });
+    setCurrentPage(1);
     if (search) setSearchParams({ search });
-  }, [search, setSearchParams]);
+  };
 
   const handleReset = () => {
     setSearch('');
     setJobType('');
     setExperienceLevel('');
     setLocation('');
+    setApplied({ search: '', job_type: '', experience_level: '', location: '' });
     setCurrentPage(1);
+    setSearchParams({});
   };
 
   return (
@@ -66,6 +77,7 @@ export default function Jobs() {
                 location={location}
                 setLocation={setLocation}
                 onReset={handleReset}
+                onApply={handleApply}
               />
             </div>
           </div>
@@ -139,6 +151,7 @@ export default function Jobs() {
                 location={location}
                 setLocation={setLocation}
                 onReset={handleReset}
+                onApply={handleApply}
               />
             </div>
           </div>
