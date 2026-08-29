@@ -17,6 +17,9 @@ const Home = lazy(() => import('@/pages/public/Home'));
 const Jobs = lazy(() => import('@/pages/public/Jobs'));
 const JobDetails = lazy(() => import('@/pages/public/JobDetails'));
 const Companies = lazy(() => import('@/pages/public/Companies'));
+const About = lazy(() => import('@/pages/public/About'));
+const Contact = lazy(() => import('@/pages/public/Contact'));
+const PrivacyPolicy = lazy(() => import('@/pages/public/PrivacyPolicy'));
 
 // Auth pages
 const Login = lazy(() => import('@/pages/auth/Login'));
@@ -61,6 +64,9 @@ const publicRoutes: RouteObject[] = [
       { path: 'jobs', element: <SuspenseWrapper><Jobs /></SuspenseWrapper> },
       { path: 'jobs/:id', element: <SuspenseWrapper><JobDetails /></SuspenseWrapper> },
       { path: 'companies', element: <SuspenseWrapper><Companies /></SuspenseWrapper> },
+      { path: 'about', element: <SuspenseWrapper><About /></SuspenseWrapper> },
+      { path: 'contact', element: <SuspenseWrapper><Contact /></SuspenseWrapper> },
+      { path: 'privacy', element: <SuspenseWrapper><PrivacyPolicy /></SuspenseWrapper> },
     ],
   },
   {
