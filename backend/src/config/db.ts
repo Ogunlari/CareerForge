@@ -5,7 +5,11 @@ let connected = false;
 
 export async function connectDatabase(): Promise<void> {
   mongoose.set('strictQuery', true);
-  await mongoose.connect(env.DATABASE_URL);
+  await mongoose.connect(env.DATABASE_URL, {
+    serverSelectionTimeoutMS: 15_000,
+    connectTimeoutMS: 15_000,
+    socketTimeoutMS: 30_000,
+  });
   connected = true;
 }
 
