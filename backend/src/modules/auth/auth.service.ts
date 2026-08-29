@@ -6,7 +6,7 @@ import { SessionModel } from '../../models/session.model.js';
 import { UserModel } from '../../models/user.model.js';
 import { AppError } from '../../utils/errors.js';
 import { signAccessToken } from '../../utils/jwt.js';
-import { getMailProvider } from '../../services/mail/index.js';
+import { sendMailSafe } from '../../services/mail/index.js';
 import {
   findUserByEmail,
   findUserById,
@@ -240,7 +240,7 @@ export async function requestPasswordReset(email: string): Promise<{ devResetTok
       <p>If you did not request this, ignore this email.</p>
     `;
 
-    await getMailProvider().send({
+    await sendMailSafe({
       to: user.email,
       subject: 'CareerForge - Reset Your Password',
       html,
