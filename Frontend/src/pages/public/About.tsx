@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import { Briefcase, Target, Users, Sparkles, Rocket, Shield } from 'lucide-react';
 
+const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+
 const values = [
   {
     icon: Target,
@@ -84,7 +86,7 @@ export default function About() {
         <p className="mt-3 text-slate-600">Join CareerForge today and turn your skills into opportunity.</p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link to="/auth/register" className="btn-primary inline-flex px-6">Get Started</Link>
-          <Link to="/jobs" className="btn-secondary inline-flex px-6">Browse Jobs</Link>
+          <Link to="/jobs" onClick={scrollToTop} className="btn-secondary inline-flex px-6">Browse Jobs</Link>
         </div>
       </section>
     </div>

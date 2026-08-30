@@ -7,6 +7,8 @@ import { useGetCompaniesQuery } from '@/features/companies/companiesApi';
 import { useAuth } from '@/context/AuthContext';
 import JobCard from '@/component/jobs/JobCard';
 
+const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+
 // Background images for the hero slideshow
 const HERO_IMAGES = [
   'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=2000&q=80',
@@ -253,6 +255,7 @@ export default function Home() {
                 <div className="flex items-center justify-center gap-3 mt-8">
                   <Link
                     to="/jobs"
+                    onClick={scrollToTop}
                     className="inline-flex items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3.5 text-base font-bold transition-colors shadow-lg shadow-indigo-200"
                   >
                     Browse Jobs
@@ -277,6 +280,7 @@ export default function Home() {
                 </Link>
                 <Link
                   to="/jobs"
+                  onClick={scrollToTop}
                   className="inline-flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-900 px-8 py-3.5 text-base font-bold border border-slate-200 transition-colors"
                 >
                   Browse Jobs

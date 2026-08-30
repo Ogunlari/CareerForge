@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import { ShieldCheck, Lock, Database, Eye, FileText } from 'lucide-react';
 
+const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+
 const sections = [
   {
     title: '1. Information We Collect',
@@ -93,7 +95,7 @@ export default function PrivacyPolicy() {
             Questions about this policy? Contact us at{' '}
             <a href="mailto:support@careerforge.com" className="text-primary-600 hover:text-primary-700 font-semibold">support@careerforge.com</a>.
           </p>
-          <Link to="/" className="btn-secondary inline-flex mt-4">Back to Home</Link>
+          <Link to="/" onClick={scrollToTop} className="btn-secondary inline-flex mt-4">Back to Home</Link>
         </div>
       </section>
     </div>
