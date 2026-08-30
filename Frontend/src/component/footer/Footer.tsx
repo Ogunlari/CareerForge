@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import { Briefcase } from 'lucide-react';
 
+const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+
 export default function Footer() {
   return (
     <footer className="bg-slate-900 text-slate-400 py-12">
@@ -18,8 +20,8 @@ export default function Footer() {
           <div>
             <h4 className="text-white font-semibold text-sm mb-3">Looking For Job</h4>
             <ul className="space-y-2 text-sm">
-              <li><Link to="/jobs" className="hover:text-white transition-colors">Browse Jobs</Link></li>
-              <li><Link to="/companies" className="hover:text-white transition-colors">Companies</Link></li>
+              <li><Link to="/jobs" onClick={scrollToTop} className="hover:text-white transition-colors">Browse Jobs</Link></li>
+              <li><Link to="/companies" onClick={scrollToTop} className="hover:text-white transition-colors">Companies</Link></li>
               <li><Link to="/auth/register" className="hover:text-white transition-colors">Create Profile</Link></li>
             </ul>
           </div>
@@ -34,9 +36,9 @@ export default function Footer() {
           <div>
             <h4 className="text-white font-semibold text-sm mb-3">Company</h4>
             <ul className="space-y-2 text-sm">
-              <li><Link to="/about" className="hover:text-white transition-colors">About Us</Link></li>
-              <li><Link to="/contact" className="hover:text-white transition-colors">Contact</Link></li>
-              <li><Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+              <li><Link to="/about" onClick={scrollToTop} className="hover:text-white transition-colors">About Us</Link></li>
+              <li><Link to="/contact" onClick={scrollToTop} className="hover:text-white transition-colors">Contact</Link></li>
+              <li><Link to="/privacy" onClick={scrollToTop} className="hover:text-white transition-colors">Privacy Policy</Link></li>
             </ul>
           </div>
         </div>
