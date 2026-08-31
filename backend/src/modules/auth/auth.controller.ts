@@ -3,6 +3,7 @@ import { ok, okMessage } from '../../utils/http.js';
 import type { AuthUser } from '../../middleware/auth.types.js';
 import * as authService from './auth.service.js';
 import {
+  googleAuthSchema,
   loginSchema,
   refreshSchema,
   resetPasswordRequestSchema,
@@ -23,6 +24,15 @@ export async function signup(req: Request, res: Response): Promise<void> {
 export async function login(req: Request, res: Response): Promise<void> {
   const input = loginSchema.parse(req.body);
   const result = await authService.login(input, {
+    userAgent: req.headers['user-agent'],
+    ipAddress: req.ip,
+  });
+  res.status(200).json({ accessToken: result.accessToken, refreshToken: result.refreshToken, user: result.user });
+}
+
+export async function googleLogin(req: Request, res: Response): Promise<void> {
+  const input = googleAuthSchema.parse(req.body);
+  const result = await authService.googleAuth(input.credential, {
     userAgent: req.headers['user-agent'],
     ipAddress: req.ip,
   });

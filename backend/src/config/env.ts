@@ -24,6 +24,8 @@ const envSchema = z.object({
   UPLOAD_DIR: z.string().default('uploads'),
   FILE_URL_SIGNING_SECRET: z.string().min(32).default('change-me-file-url-signing-secret'),
   FILE_URL_TTL_MS: z.coerce.number().int().positive().default(15 * 60 * 1000),
+  GOOGLE_CLIENT_ID: z.string().default(''),
+  GOOGLE_CLIENT_SECRET: z.string().default(''),
 });
 
 const parsed = envSchema.safeParse(process.env);

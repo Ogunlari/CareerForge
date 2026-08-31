@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Briefcase } from 'lucide-react';
+import { Menu, X, Briefcase, LayoutDashboard, User, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import UserMenu from './UserMenu';
 import type { UserRole } from '@/types';
@@ -12,7 +12,7 @@ const dashboardPaths: Record<UserRole, string> = {
 };
 
 export default function Navbar() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -127,13 +127,51 @@ export default function Navbar() {
             ))}
             <div className="border-t border-slate-200 pt-3">
               {user ? (
-                <Link
-                  to={dashboardPaths[user.role]}
-                  className="block rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-700 
-                  transition hover:bg-slate-50 hover:text-slate-900"
-                >
-                  Dashboard
-                </Link>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-3 px-2 py-2 rounded-xl bg-slate-50">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-semibold text-sm shrink-0">
+                      {user.full_name?.[0]?.toUpperCase() || 'U'}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-slate-900 truncate">{user.full_name}</p>
+                      <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                      <span className="badge bg-primary-50 text-primary-600 mt-0.5">
+                        {user.role === 'student' ? 'Job Seeker' : user.role === 'recruiter' ? 'Recruiter' : 'Admin'}
+                      </span>
+                    </div>
+                  </div>
+                  <Link
+                    to={dashboardPaths[user.role]}
+                    className="flex items-center gap-2.5 rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                  >
+                    <LayoutDashboard className="w-4 h-4 text-slate-400" /> Dashboard
+                  </Link>
+                  {user.role === 'student' && (
+                    <Link
+                      to="/student/profile"
+                      className="flex items-center gap-2.5 rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                    >
+                      <User className="w-4 h-4 text-slate-400" /> My Profile
+                    </Link>
+                  )}
+                  {user.role === 'recruiter' && (
+                    <Link
+                      to="/recruiter/company-profile"
+                      className="flex items-center gap-2.5 rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                    >
+                      <Settings className="w-4 h-4 text-slate-400" /> Company Profile
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => {
+                      signOut();
+                      setMobileOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 rounded-lg px-4 py-2.5 text-sm font-semibold text-error-600 transition hover:bg-error-50"
+                  >
+                    <LogOut className="w-4 h-4" /> Sign Out
+                  </button>
+                </div>
               ) : (
                 <div className="grid grid-cols-2 gap-2 pt-1">
                   <Link

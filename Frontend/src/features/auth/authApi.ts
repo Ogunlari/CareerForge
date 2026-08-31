@@ -43,6 +43,18 @@ export const authApi = baseApi.injectEndpoints({
       },
     }),
 
+    googleAuth: builder.mutation<AuthResponse, { credential: string }>({
+      query: (body) => ({ url: '/auth/google', method: 'POST', body }),
+      onQueryStarted: async (_arg, { dispatch, queryFulfilled }) => {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(setCredentials({ user: data.user, accessToken: data.accessToken, refreshToken: data.refreshToken }));
+        } catch {
+          /* error surfaced to the component */
+        }
+      },
+    }),
+
     logout: builder.mutation<{ message: string }, void>({
       query: () => ({ url: '/auth/logout', method: 'POST' }),
       onQueryStarted: async (_arg, { dispatch, queryFulfilled }) => {
@@ -97,6 +109,7 @@ export const authApi = baseApi.injectEndpoints({
 export const {
   useSignUpMutation,
   useLoginMutation,
+  useGoogleAuthMutation,
   useLogoutMutation,
   useGetMeQuery,
   useLazyGetMeQuery,

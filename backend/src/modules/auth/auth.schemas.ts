@@ -29,6 +29,10 @@ export const refreshSchema = z.object({
   refreshToken: z.string().min(64).max(256),
 });
 
+export const googleAuthSchema = z.object({
+  credential: z.string().min(1),
+});
+
 export type SignupInput = z.infer<typeof signupSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RefreshInput = z.infer<typeof refreshSchema>;

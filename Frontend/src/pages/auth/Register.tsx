@@ -4,6 +4,7 @@ import { Briefcase, Mail, Lock, User, Eye, EyeOff, AlertCircle, GraduationCap, B
 import { useAuth } from '@/context/AuthContext';
 import { validateEmail, validatePassword, validateName } from '@/utilities/validator';
 import type { UserRole } from '@/types';
+import GoogleButton from '@/component/common/GoogleButton';
 
 export default function Register() {
   const { signUp } = useAuth();
@@ -110,14 +111,23 @@ export default function Register() {
             Already have an account? <Link to="/auth/login" className="text-primary-600 hover:text-primary-700 font-semibold">
             Sign in
             </Link>
-
-            <nav className = "mt-10">
-              <Link to="/home" className="text-primary-600 hover:text-primary-700 font-semibold">
-              Home
-              </Link>
-              </nav>
-
           </p>
+
+          <nav className="mt-10 flex justify-center">
+            <Link to="/" className="text-primary-600 hover:text-primary-700 font-semibold">
+              Home
+            </Link>
+          </nav>
+        </div>
+
+        <div className="flex items-center gap-3 my-4">
+          <div className="flex-1 h-px bg-slate-200" />
+          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">or sign up with</span>
+          <div className="flex-1 h-px bg-slate-200" />
+        </div>
+
+        <div className="card p-6">
+          <GoogleButton role="student" />
         </div>
       </div>
     </div>

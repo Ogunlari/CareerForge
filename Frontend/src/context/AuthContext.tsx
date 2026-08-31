@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { extractErrorMessage } from '@/features/api/baseApi';
-import { authApi, useGetMeQuery, useLoginMutation, useLogoutMutation, useSignUpMutation } from '@/features/auth/authApi';
+import { authApi, useGetMeQuery, useGoogleAuthMutation, useLoginMutation, useLogoutMutation, useSignUpMutation } from '@/features/auth/authApi';
 import { clearCredentials, setUser } from '@/features/auth/authSlice';
 import type { Profile, UserRole } from '@/types';
 
@@ -10,6 +10,7 @@ interface AuthContextValue {
   loading: boolean;
   signIn: (email: string, password: string, remember?: boolean) => Promise<{ error: string | null; user?: Profile }>;
   signUp: (email: string, password: string, name: string, role: UserRole) => Promise<{ error: string | null }>;
+  signInWithGoogle: (credential: string) => Promise<{ error: string | null; user?: Profile }>;
   signOut: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -22,6 +23,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const token = useAppSelector((state) => state.auth.accessToken);
 
   const [login] = useLoginMutation();
+  const [googleAuth] = useGoogleAuthMutation();
   const [signUpMutation] = useSignUpMutation();
   const [logoutMutation] = useLogoutMutation();
 
@@ -70,6 +72,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       },
 
+      async signInWithGoogle(credential) {
+        try {
+          const data = await googleAuth({ credential }).unwrap();
+          return { error: null, user: data.user };
+        } catch (err) {
+          return { error: extractErrorMessage(err) };
+        }
+      },
+
       async signOut() {
         try {
           await logoutMutation().unwrap();
@@ -92,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       },
     }),
-    [user, skipMe, meFetching, login, signUpMutation, logoutMutation, dispatch, token],
+    [user, skipMe, meFetching, login, googleAuth, signUpMutation, logoutMutation, dispatch, token],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

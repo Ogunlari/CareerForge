@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Briefcase, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { validateEmail, validatePassword } from '@/utilities/validator';
+import GoogleButton from '@/component/common/GoogleButton';
 
 export default function Login() {
   const { signIn } = useAuth();
@@ -91,6 +92,16 @@ export default function Login() {
             Don't have an account?
              <Link to="/auth/register" className="text-primary-600 hover:text-primary-700 font-semibold"> Sign up</Link>
           </p>
+        </div>
+
+        <div className="flex items-center gap-3 my-4">
+          <div className="flex-1 h-px bg-slate-200" />
+          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">or continue with</span>
+          <div className="flex-1 h-px bg-slate-200" />
+        </div>
+
+        <div className="card p-6">
+          <GoogleButton />
         </div>
       </div>
     </div>

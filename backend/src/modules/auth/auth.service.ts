@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import { OAuth2Client } from 'google-auth-library';
 import { createHash, randomBytes } from 'node:crypto';
 import { env, isProduction } from '../../config/env.js';
 import { PasswordResetTokenModel } from '../../models/password-reset-token.model.js';
@@ -104,6 +105,64 @@ export async function login(
   if (!passwordMatches) throw new AppError('INVALID_CREDENTIALS', 401, 'Invalid email or password.');
 
   assertNotBlocked(user);
+
+  const userId = String(user._id);
+  const { accessToken, refreshToken } = await createSession(userId, undefined, meta?.userAgent, meta?.ipAddress);
+
+  return { accessToken, refreshToken, user: toPublicUser(user) };
+}
+
+export async function googleAuth(
+  credential: string,
+  meta?: { userAgent?: string; ipAddress?: string },
+): Promise<AuthResult> {
+  const clientId = env.GOOGLE_CLIENT_ID;
+  if (!clientId) {
+    throw new AppError('GOOGLE_AUTH_DISABLED', 501, 'Google sign-in is not configured.');
+  }
+
+  const client = new OAuth2Client(clientId);
+
+  let ticket;
+  try {
+    ticket = await client.verifyIdToken({ idToken: credential, audience: clientId });
+  } catch {
+    throw new AppError('INVALID_GOOGLE_TOKEN', 401, 'Invalid Google credential.');
+  }
+
+  const payload = ticket.getPayload();
+  if (!payload?.email || !payload.sub) {
+    throw new AppError('INVALID_GOOGLE_TOKEN', 401, 'Invalid Google token payload.');
+  }
+
+  const email = payload.email.toLowerCase();
+  const fullName: string = payload.name || email.split('@')[0] || 'User';
+  const avatar = payload.picture || undefined;
+
+  let user = await findUserByEmail(email);
+
+  if (user) {
+    if (user.is_blocked) {
+      throw new AppError('ACCOUNT_BLOCKED', 403, 'This account has been suspended. Contact support.');
+    }
+    if (avatar && !user.avatar) {
+      user.avatar = avatar;
+      await user.save();
+    }
+  } else {
+    const randomPassword = randomBytes(32).toString('hex');
+    const password_hash = await bcrypt.hash(randomPassword, BCRYPT_ROUNDS);
+    user = await insertUser({
+      email,
+      password_hash,
+      full_name: fullName,
+      role: 'student',
+    });
+    if (avatar) {
+      user.avatar = avatar;
+      await user.save();
+    }
+  }
 
   const userId = String(user._id);
   const { accessToken, refreshToken } = await createSession(userId, undefined, meta?.userAgent, meta?.ipAddress);

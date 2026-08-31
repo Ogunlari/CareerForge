@@ -6,6 +6,7 @@ import { requireRecentAuth } from '../../middleware/recent-auth.middleware.js';
 import { validateBody } from '../../middleware/validate.middleware.js';
 import * as controller from './auth.controller.js';
 import {
+  googleAuthSchema,
   loginSchema,
   refreshSchema,
   resetPasswordRequestSchema,
@@ -26,6 +27,7 @@ export const authRouter = Router();
 
 authRouter.post('/signup', authLimiter, validateBody(signupSchema), controller.signup);
 authRouter.post('/login', authLimiter, validateBody(loginSchema), controller.login);
+authRouter.post('/google', authLimiter, validateBody(googleAuthSchema), controller.googleLogin);
 authRouter.post('/refresh', authLimiter, validateBody(refreshSchema), controller.refresh);
 authRouter.post('/logout', requireAuth, controller.logout);
 authRouter.get('/me', requireAuth, controller.me);
