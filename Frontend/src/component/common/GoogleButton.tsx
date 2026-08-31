@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import { GraduationCap, Building2, Loader2 } from 'lucide-react';
+import type { CSSProperties } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { extractErrorMessage } from '@/features/api/baseApi';
 import Modal from '@/component/common/Modal';
@@ -61,18 +62,25 @@ export default function GoogleButton({ role = 'student' }: { role?: 'student' | 
 
   if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) return null;
 
+  const googleBtnStyle: CSSProperties = {
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+  };
+
   return (
     <div className="w-full">
-      <GoogleLogin
-        onSuccess={onSuccess}
-        onError={() => setError('Google sign-in failed. Please try again.')}
-        useOneTap={false}
-        shape="pill"
-        theme="outline"
-        size="large"
-        text={role === 'recruiter' ? 'signup_with' : 'continue_with'}
-        width="100%"
-      />
+      <div style={googleBtnStyle}>
+        <GoogleLogin
+          onSuccess={onSuccess}
+          onError={() => setError('Google sign-in failed. Please try again.')}
+          useOneTap={false}
+          shape="pill"
+          theme="outline"
+          size="large"
+          text={role === 'recruiter' ? 'signup_with' : 'continue_with'}
+        />
+      </div>
       {error && <p className="text-sm text-error-700 mt-2 text-center">{extractErrorMessage({ data: { message: error } })}</p>}
 
       <Modal open={showRoleModal} onClose={() => { setShowRoleModal(false); setPendingCredential(null); }} title="How do you want to use CareerForge?" size="sm">
