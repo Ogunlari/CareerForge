@@ -12,6 +12,9 @@ import AdminLayout from '@/layouts/AdminLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import PublicOnlyRoute from '@/components/PublicOnlyRoute';
 
+// Error isolation per route group
+import ErrorBoundary from '@/components/ErrorBoundary';
+
 // Public pages
 const Home = lazy(() => import('@/pages/public/Home'));
 const Jobs = lazy(() => import('@/pages/public/Jobs'));
@@ -59,7 +62,7 @@ function SuspenseWrapper({ children }: { children: React.ReactNode }) {
 
 const publicRoutes: RouteObject[] = [
   {
-    element: <PublicLayout />,
+    element: <ErrorBoundary><PublicLayout /></ErrorBoundary>,
     children: [
       { path: '/', element: <SuspenseWrapper><Home /></SuspenseWrapper> },
       { path: 'jobs', element: <SuspenseWrapper><Jobs /></SuspenseWrapper> },
@@ -71,7 +74,7 @@ const publicRoutes: RouteObject[] = [
     ],
   },
   {
-    element: <PublicOnlyRoute />,
+    element: <ErrorBoundary><PublicOnlyRoute /></ErrorBoundary>,
     children: [
       {
         path: 'auth',
@@ -91,7 +94,7 @@ const studentRoutes: RouteObject[] = [
     element: <ProtectedRoute allowedRoles={['student']} />,
     children: [
       {
-        element: <StudentLayout />,
+        element: <ErrorBoundary><StudentLayout /></ErrorBoundary>,
         children: [
           {
             path: 'student',
@@ -115,7 +118,7 @@ const recruiterRoutes: RouteObject[] = [
     element: <ProtectedRoute allowedRoles={['recruiter']} />,
     children: [
       {
-        element: <RecruiterLayout />,
+        element: <ErrorBoundary><RecruiterLayout /></ErrorBoundary>,
         children: [
           {
             path: 'recruiter',
@@ -139,7 +142,7 @@ const adminRoutes: RouteObject[] = [
     element: <ProtectedRoute allowedRoles={['admin']} />,
     children: [
       {
-        element: <AdminLayout />,
+        element: <ErrorBoundary><AdminLayout /></ErrorBoundary>,
         children: [
           {
             path: 'admin',

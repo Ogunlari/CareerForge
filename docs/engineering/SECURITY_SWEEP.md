@@ -1,15 +1,16 @@
 # Security Sweep — CareerForge
 
 **Audit Date:** 2026-08-24
+**Last Review:** 2026-08-31
 **Standard:** OWASP Top 10 + Engineering Playbook §11
 
 ---
 
 ## Executive Summary
 
-CareerForge has solid backend security foundations (JWT auth, rate limiting, input validation via Zod) but faces critical gaps on the frontend and in deployment configuration that must be addressed before production.
+CareerForge has solid backend security foundations (JWT auth, rate limiting, input validation via Zod). **All P0 security items from the original sweep have been resolved** (route guards, token consolidation, Tailwind). Remaining work is configuration (CORS) and lower-priority hardening.
 
-**Overall Risk Rating:** HIGH — Auth/authorization bypass vectors exist.
+**Overall Risk Rating:** MEDIUM — P0 frontend auth/authorization gaps resolved; production config still required.
 
 ---
 
@@ -24,11 +25,9 @@ CareerForge has solid backend security foundations (JWT auth, rate limiting, inp
 
 ### ❌ Critical Gaps (Frontend)
 
-- **No client-side route guards on admin panels:** `/admin/*` chrome renders for anonymous visitors. Backend protection depends entirely on API rejection — admin screens currently don't even make API calls, so the "Admin Panel" is fully visible.
-  - **Impact:** BFLA (Broken Function Level Authorization) — anonymous users see admin UI
-  - **Fix:** Add `<ProtectedRoute allowedRoles={['admin']}>` wrapper in `Frontend/src/routes/AppRoutes.tsx`
-
-- **Token key mismatch:** Frontend stores JWT under `accessToken` (`baseApi.ts:9`) but legacy code may reference `auth_token`. The two parallel HTTP layers (RTK Query vs. old fetch helpers) need consolidation.
+- **None remaining.** Original P0 items resolved:
+  - **Route guards now implemented:** `<ProtectedRoute allowedRoles={['admin']}>` wraps admin routes, `PublicOnlyRoute` wraps auth routes in `AppRoutes.tsx`.
+  - **Token key mismatch resolved:** Single HTTP client in `baseApi.ts` with consistent `accessToken`/`refreshToken` keys; legacy `src/services/` deleted.
 
 ### ✅ Implemented (Backend Auth)
 
@@ -53,8 +52,8 @@ CareerForge has solid backend security foundations (JWT auth, rate limiting, inp
 
 ### ⚠️ Gaps
 
-- **Frontend:** No schema validation library on forms — relies on HTML5 validation + API errors
-- **No file upload validation yet:** Resume is currently a URL string, not an upload
+- **No file upload AV scanning yet:** Uploads use `scanned` field but no AV scanner is wired. Plug one in before exposing files in production.
+- **Frontend:** No schema validation library on forms — relies on HTML5 validation + API errors (Zod validation is used on key forms like CreateJob/CompanyProfile).
 
 ---
 
@@ -125,16 +124,11 @@ CareerForge has solid backend security foundations (JWT auth, rate limiting, inp
 
 ### Current State
 
-- **Not implemented:** Resume is a URL string field (`resume_url` in user profile)
-- **No file upload endpoints exist**
+- **Implemented:** Resume upload via `POST /api/files/resume` (PDF/DOC/DOCX/txt, 5 MB max, MIME allowlist), stored in `UPLOAD_DIR` outside the app source, with immutable FileRecord metadata (sha256, mimetype, size, owner) and HMAC-signed time-limited download URLs.
 
-### Recommendations (When Implemented)
+### Remaining
 
-- Allowlist MIME types (PDF, DOCX, TXT only)
-- Limit file size (5MB recommended)
-- Use signed URLs or move to cloud storage (S3, GCS)
-- Scan uploads for malware before serving
-- Store outside webroot with randomized filenames
+- **AV scanning:** `scanned` field is set but no AV scanner is wired. Plug one in before exposing files in production.
 
 ---
 
@@ -193,9 +187,12 @@ CareerForge has solid backend security foundations (JWT auth, rate limiting, inp
 
 ## 11. Content Security (Frontend)
 
+### ✅ Implemented
+
+- **Tailwind via Vite plugin:** `@tailwindcss/vite` v4.3, no CDN script tag. Satisfies CSP compliance.
+
 ### ⚠️ Gaps
 
-- **Tailwind loaded via CDN script tag** (`index.html`) — should use Vite plugin pipeline for production (FOUC risk, no CSP nonce)
 - **No CSP nonce** for inline scripts
 - **No subresource integrity** on external resources
 
@@ -216,28 +213,28 @@ Add `npm audit --audit-level=high` to CI pipeline (see `.github/workflows/ci.yml
 
 ## Priority Remediation List
 
-| Priority | Issue | OWASP | Effort |
+| Priority | Issue | OWASP | Status |
 |----------|-------|-------|--------|
-| **P0** | Add frontend route guards for admin/recruiter | A01:2021 | 2h |
-| **P0** | Fix token key mismatch (consolidate HTTP layers) | A07:2021 | 4h |
-| **P1** | Replace Tailwind CDN with Vite plugin | A05:2021 | 1h |
-| **P1** | Restrict CORS_ORIGIN in production | A05:2021 | 0.5h |
-| **P2** | Add npm audit to CI | A06:2021 | 1h |
-| **P2** | Document localStorage XSS risk acceptance | A04:2021 | 0.5h |
-| **P3** | Add per-user rate limiting | A04:2021 | 4h |
-| **P3** | Implement file upload security (when needed) | A04:2021 | 8h |
+| **P0** | Add frontend route guards for admin/recruiter | A01:2021 | ✅ Resolved (2026-08-28) |
+| **P0** | Fix token key mismatch (consolidate HTTP layers) | A07:2021 | ✅ Resolved (2026-08-28) |
+| **P1** | Replace Tailwind CDN with Vite plugin | A05:2021 | ✅ Resolved (2026-08-28) |
+| **P1** | Restrict CORS_ORIGIN in production | A05:2021 | ⚠️ Config needed — set `CORS_ORIGIN` before deploy |
+| **P2** | Add npm audit to CI | A06:2021 | ❌ Open |
+| **P2** | Document localStorage XSS risk acceptance | A04:2021 | ❌ Open |
+| **P3** | Add per-user rate limiting | A04:2021 | ❌ Open |
+| **P3** | Wire AV scanning for file uploads | A04:2021 | ❌ Open |
 
 ---
 
 ## Appendix: Security Controls Matrix
 
 | Control | Backend | Frontend | Status |
-|---------|---------|----------|--------|
+|---------|----------|---------|--------|
 | Authentication | JWT + refresh tokens | RTK Query auto-refresh | ✅ Working |
-| Authorization | Role guards + ownership checks | Route guards (partial) | ⚠️ Frontend gaps |
-| Input Validation | Zod schemas | HTML5 only | ⚠️ Frontend gaps |
+| Authorization | Role guards + ownership checks | Route guards + role checks | ✅ Working |
+| Input Validation | Zod schemas | Zod on key forms + HTML5 | ⚠️ Partial coverage |
 | Rate Limiting | Global + auth-specific | N/A | ✅ Working |
-| Security Headers | Helmet | CSP (partial) | ⚠️ CDN dependency |
-| Error Handling | Central handler, no stack traces | ErrorBoundary component | ✅ Working |
+| Security Headers | Helmet | CSP via Vite pipeline | ✅ Working |
+| Error Handling | Central handler, no stack traces | ErrorBoundary (root-level) | ⚠️ Add per-route boundaries |
 | Secrets | Zod validation, fail-fast | N/A | ✅ Working |
-| CORS | Configurable whitelist | N/A | ✅ Working |
+| CORS | Configurable whitelist | N/A | ⚠️ Restrict in prod |

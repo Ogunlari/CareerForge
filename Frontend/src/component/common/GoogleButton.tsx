@@ -1,17 +1,79 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import { GraduationCap, Building2, Loader2 } from 'lucide-react';
-import type { CSSProperties } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { extractErrorMessage } from '@/features/api/baseApi';
 import Modal from '@/component/common/Modal';
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: Record<string, unknown>) => void;
+          renderButton: (parent: HTMLElement, options: Record<string, unknown>) => void;
+          prompt: (callback?: unknown) => void;
+        };
+      };
+    };
+  }
+}
 
 const dashboardPaths: Record<string, string> = {
   student: '/student/dashboard',
   recruiter: '/recruiter/dashboard',
   admin: '/admin/dashboard',
 };
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+
+let gsiInitialized = false;
+let gsiLoadPromise: Promise<void> | null = null;
+
+const SCRIPT_SRC = 'https://accounts.google.com/gsi/client';
+
+function loadGsiScript(): Promise<void> {
+  if (gsiLoadPromise) return gsiLoadPromise;
+  gsiLoadPromise = new Promise<void>((resolve, reject) => {
+    const existing = document.querySelector(`script[src="${SCRIPT_SRC}"]`);
+    if (existing) {
+      if (window.google?.accounts?.id) {
+        resolve();
+      } else {
+        existing.addEventListener('load', () => resolve());
+        existing.addEventListener('error', () => reject(new Error('Failed to load Google identity script.')));
+      }
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = SCRIPT_SRC;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Failed to load Google identity script.'));
+    document.head.appendChild(script);
+  });
+  gsiLoadPromise.catch(() => {
+    gsiLoadPromise = null;
+  });
+  return gsiLoadPromise;
+}
+
+function ensureGsiInitialized(callback: (credentialResponse: { credential?: string }) => void) {
+  if (!gsiInitialized && window.google?.accounts?.id) {
+    window.google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback,
+    });
+    gsiInitialized = true;
+  }
+}
+
+interface CredentialResponse {
+  credential?: string;
+  clientId?: string;
+  select_by?: string;
+}
 
 export default function GoogleButton({ role = 'student' }: { role?: 'student' | 'recruiter' }) {
   const { signInWithGoogle, checkGoogleUser } = useAuth();
@@ -20,8 +82,19 @@ export default function GoogleButton({ role = 'student' }: { role?: 'student' | 
   const [pendingCredential, setPendingCredential] = useState<string | null>(null);
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [loadingRole, setLoadingRole] = useState<'student' | 'recruiter' | null>(null);
+  const buttonRef = useRef<HTMLDivElement | null>(null);
 
-  const handleGoogleCredential = async (credential: string) => {
+  const completeSignIn = useCallback(async (credential: string, chosenRole?: 'student' | 'recruiter') => {
+    setError(null);
+    const result = await signInWithGoogle(credential, chosenRole);
+    if (result.error) {
+      setError(result.error);
+    } else {
+      navigate(dashboardPaths[result.user?.role || role]);
+    }
+  }, [signInWithGoogle, navigate, role]);
+
+  const handleGoogleCredential = useCallback(async (credential: string) => {
     setError(null);
     const { exists } = await checkGoogleUser(credential);
     if (!exists) {
@@ -30,25 +103,45 @@ export default function GoogleButton({ role = 'student' }: { role?: 'student' | 
     } else {
       await completeSignIn(credential);
     }
-  };
+  }, [checkGoogleUser, completeSignIn]);
 
-  const onSuccess = async (response: CredentialResponse) => {
+  const onCredential = useCallback((response: CredentialResponse) => {
     if (!response.credential) {
       setError('Google sign-in failed. No credential returned.');
       return;
     }
-    await handleGoogleCredential(response.credential);
-  };
+    handleGoogleCredential(response.credential);
+  }, [handleGoogleCredential]);
 
-  const completeSignIn = async (credential: string, chosenRole?: 'student' | 'recruiter') => {
-    setError(null);
-    const result = await signInWithGoogle(credential, chosenRole);
-    if (result.error) {
-      setError(result.error);
-    } else {
-      navigate(dashboardPaths[result.user?.role || role]);
-    }
-  };
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID) return;
+    let cancelled = false;
+
+    ensureGsiInitialized(onCredential);
+
+    loadGsiScript()
+      .then(() => {
+        if (cancelled) return;
+        ensureGsiInitialized(onCredential);
+        if (window.google?.accounts?.id && buttonRef.current) {
+          window.google.accounts.id.renderButton(buttonRef.current, {
+            type: 'standard',
+            theme: 'outline',
+            size: 'large',
+            text: role === 'recruiter' ? 'signup_with' : 'continue_with',
+            shape: 'pill',
+            useOneTap: false,
+          });
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err?.message ?? 'Google sign-in failed to load.');
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [role, onCredential]);
 
   const chooseRole = async (chosenRole: 'student' | 'recruiter') => {
     if (!pendingCredential) return;
@@ -60,27 +153,11 @@ export default function GoogleButton({ role = 'student' }: { role?: 'student' | 
     setLoadingRole(null);
   };
 
-  if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) return null;
-
-  const googleBtnStyle: CSSProperties = {
-    width: '100%',
-    display: 'flex',
-    justifyContent: 'center',
-  };
+  if (!GOOGLE_CLIENT_ID) return null;
 
   return (
     <div className="w-full">
-      <div style={googleBtnStyle}>
-        <GoogleLogin
-          onSuccess={onSuccess}
-          onError={() => setError('Google sign-in failed. Please try again.')}
-          useOneTap={false}
-          shape="pill"
-          theme="outline"
-          size="large"
-          text={role === 'recruiter' ? 'signup_with' : 'continue_with'}
-        />
-      </div>
+      <div ref={buttonRef} className="w-full flex justify-center" />
       {error && <p className="text-sm text-error-700 mt-2 text-center">{extractErrorMessage({ data: { message: error } })}</p>}
 
       <Modal open={showRoleModal} onClose={() => { setShowRoleModal(false); setPendingCredential(null); }} title="How do you want to use CareerForge?" size="sm">

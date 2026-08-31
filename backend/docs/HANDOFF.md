@@ -27,6 +27,21 @@ Verified end-to-end against a live MongoDB:
   job ownership, application state machine, withdraw/re-apply, blocking with audit trail, every
   authorization boundary, recruiter company linking, and the file-upload/signed-URL lifecycle
 
+### Frontend integration status (verified 2026-08-31)
+
+- **Route guards:** `ProtectedRoute` with role-based `allowedRoles` wraps student, recruiter, and
+  admin route groups in `AppRoutes.tsx`. `PublicOnlyRoute` wraps auth pages.
+- **Token consolidation:** Single HTTP client in `baseApi.ts` with consistent `accessToken`/`refreshToken`
+  keys. Auto-refresh on 401 with queue-based race condition prevention.
+- **Tailwind:** Vite plugin pipeline (`@tailwindcss/vite` v4.3), no CDN.
+- **Admin endpoints:** 12 frontend hooks wired to 9 backend endpoints (users, block/unblock, audit
+  logs, reports, stats, jobs, contact messages).
+- **Recruiter tools:** `CreateJob.tsx` wired to `useCreateJobMutation`. `CompanyProfile.tsx` wired to
+  full company CRUD. Company linking via profile PATCH.
+- **Security page:** Session listing/revocation wired via `useGetSessionsQuery`, `useRevokeSessionMutation`,
+  `useLogoutAllMutation`.
+- **ErrorBoundary:** Root-level only in `main.tsx`. Per-route-group boundaries not yet added.
+
 ## Run it
 
 ```bash
@@ -44,47 +59,32 @@ npm run typecheck && npm run lint && npm test    # all green at handoff
 
 ## Priority list for the next engineer
 
-0. ~~Recruiter "my jobs" + admin stats/jobs endpoints~~ **Done.**
-1. ~~Integration tests~~ **Done:** 25 tests, flushed out and fixed four real bugs:
-   - `GET /jobs/:jobId/applications` had **no ownership check**. Now owner-recruiter or admin only.
-   - `requireAuth` trusted the JWT forever. Now re-checks `is_blocked`/existence per request.
-   - `GET /applications/student` required a `studentId` query param. Now forces from token.
-   - Auth responses exposed only `_id`. `toPublicUser` now emits both `_id` and `id`.
-2. ~~Mail adapter~~ **Done:** `src/services/mail/` with dev console + Nodemailer SMTP providers.
-   Set `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `MAIL_FROM` for production.
-   Without SMTP in non-production, `/auth/reset-password-request` returns `devResetToken`.
-3. ~~Race-safe duplicate-application prevention~~ **Done:** compound unique index
-   `{student_id, job_id}` + E11000 duplicate-key catch as defense-in-depth.
-4. ~~Real recommendations~~ **Done:** skill-overlap scoring from student profile tags/requirements,
-   recency fallback when no skills available.
-5. ~~Refresh token rotation + session revocation~~ **Done:** access tokens carry `jti` claim
-   (15 min TTL), opaque refresh tokens (64 bytes hex, 7 d TTL), token-family tracking for
-   reuse detection, `POST /auth/refresh` (no auth required), `POST /auth/logout` revokes session.
-   Password reset and admin block also invalidate all sessions. Frontend stores both tokens,
-   baseApi interceptor auto-refreshes on 401.
-6. **Frontend fixes from productnote.md** that touch this API:
-   - ~~legacy `src/services/` deleted; RTK Query slices with `TOKEN_KEY` in `baseApi.ts`.~~ **Done.**
-   - ~~frontend default port assumptions disagree (`3000` vs `5000`); this API defaults to **5000**.~~ Port default resolved; baseApi.ts uses consistent token keys.
-   - ~~Token key mismatch between `auth.service.ts` and `services/api.ts`~~ **Done.**
-7. ~~**CompanyProfile.tsx** — currently a static shell with no API calls.~~ **Done:** Wired to
-   `useGetCompanyByIdQuery`, `useUpdateCompanyMutation`, and `useCreateCompanyMutation`.
-   Full company creation flow added.
-8. ~~**Security.tsx** — pure placeholder.~~ **Done:** Session listing/revocation now wired via
-   `useGetSessionsQuery`, `useRevokeSessionMutation`, `useLogoutAllMutation`.
-9. ~~**File uploads** — resume is a URL string today. If you accept uploads, follow playbook §11~~ **Done:**
-   `POST /api/files/resume` (multipart, MIME allowlist, 5 MB limit) → `{file_id, url, expires_at}`;
-   disk storage in `UPLOAD_DIR` with immutable `FileRecord` metadata and HMAC-signed time-limited
-   download URLs served by `GET /api/files/:storageKey?exp=&sig=`. `scanned` field is set but no AV
-   scanner is wired — plug one in before exposing files in production (playbook §11).
-10. **Code splitting** — React.lazy per route group in `AppRoutes.tsx`, manualChunks in `vite.config.ts`.
-11. **Sentry integration** — added for both backend and frontend error tracking.
-12. **CI/CD pipeline** — GitHub Actions workflow at `.github/workflows/ci.yml`.
-13. **docs/ structure** — product brief, security sweep, operational runbook, precedence list.
-14. **Error boundary** — added to frontend for graceful error handling.
-15. **Zod form validation** — added to CreateJob, CompanyProfile, Profile forms.
-16. **Cursor-based pagination** — added as alternative to offset pagination.
-17. **Mongoose query timeouts** — added to prevent slow queries from hanging.
-18. **Service layer extraction** — admin, companies, saved-jobs, notifications modules refactored.
+All original items (0-18) are **complete**. The remaining work is:
+
+### Production blockers
+
+1. **CORS_ORIGIN production config** — Default is `*` in `src/config/env.ts:12`. Must set
+   `CORS_ORIGIN` env var to specific frontend origin(s) in production. Render.yaml has it as
+   `sync: false` — configure before deploying.
+
+2. **Per-route-group ErrorBoundary** — Currently only root-level in `main.tsx`. Add
+   `<ErrorBoundary>` wrappers around `StudentLayout`, `RecruiterLayout`, and `AdminLayout`
+   in `AppRoutes.tsx` so a crash in one group doesn't unmount the entire app.
+
+### Cleanup
+
+3. **Remove leftover artifacts** — `test-output.txt`, `start-mongod.ps1`, `start-mongod.vbs`
+   in backend root are dev leftovers. Add to `.gitignore` or delete.
+
+4. **Contact module service layer** — `src/modules/contact/contact.routes.ts` has inline
+   business logic. Extract to `contact.service.ts` and `contact.repository.ts` for consistency
+   with other modules.
+
+### Future work
+
+5. **Frontend tests** — No test harness exists in `Frontend/`. Add Vitest + React Testing Library.
+6. **Security sweep remaining items** — localStorage XSS risk acceptance, per-user rate limiting,
+   npm audit in CI. See `docs/engineering/SECURITY_SWEEP.md`.
 
 ## Things that will bite you if ignored
 

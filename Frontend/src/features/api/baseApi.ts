@@ -3,7 +3,9 @@ import type { FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { setCredentials, clearCredentials } from '@/features/auth/authSlice';
 import type { Profile } from '@/types';
 
-export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const isProd = import.meta.env.PROD;
+export const API_BASE =
+  import.meta.env.VITE_API_URL || (isProd ? 'https://careerforge-xi7a.onrender.com/api' : 'http://localhost:5000/api');
 
 export const ACCESS_TOKEN_KEY = 'accessToken';
 export const REFRESH_TOKEN_KEY = 'refreshToken';

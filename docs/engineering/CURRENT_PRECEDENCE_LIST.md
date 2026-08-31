@@ -1,6 +1,6 @@
 # Current Precedence List — CareerForge
 
-**Last Updated:** 2026-08-26
+**Last Updated:** 2026-08-31
 
 ---
 
@@ -10,86 +10,90 @@ This document tracks what blocks production launch, what's non-blocking but impo
 
 ---
 
-## 🔴 BLOCKS LAUNCH (Must Complete Before Production)
+## BLOCKS LAUNCH (Must Complete Before Production)
 
 | # | Item | Status | Effort | Notes |
 |---|------|--------|--------|-------|
-| 1 | **Frontend route guards** | ❌ Not started | 2h | Admin/recruiter chrome visible to anonymous users. Add `<ProtectedRoute>` wrappers. |
-| 2 | **Token key consolidation** | ❌ Not started | 4h | Two parallel HTTP layers (RTK Query vs. legacy fetch). Unify to single client. |
-| 3 | **Tailwind CDN → Vite plugin** | ❌ Not started | 1h | Current `index.html` loads Tailwind via CDN script. FOUC risk, no CSP compliance. |
-| 4 | **CORS_ORIGIN restriction** | ⚠️ Config needed | 0.5h | Default `*` must be replaced with specific origins in production. |
-| 5 | **Admin endpoint implementation** | 🔴 UI shell only | 40h+ | Every admin screen returns empty data. Either implement endpoints or hide admin area. |
-| 6 | **Security Sweep remediation** | ❌ Not started | 8h | See `docs/engineering/SECURITY_SWEEP.md` — P0/P1 items. |
+| 1 | **CORS_ORIGIN restriction** | Config needed | 0.5h | Default `*` in `env.ts:12`. Set `CORS_ORIGIN` env var to specific frontend origin(s) before deploying. |
+| 2 | **Per-route-group ErrorBoundary** | Not started | 2h | Root-level only in `main.tsx`. Add `<ErrorBoundary>` around `StudentLayout`, `RecruiterLayout`, `AdminLayout` in `AppRoutes.tsx`. |
 
-**Total estimated effort to unblock launch:** ~56 hours
+**Total estimated effort to unblock launch:** ~2.5 hours
 
 ---
 
-## 🟡 NON-BLOCKING (Should Complete Soon)
+## NON-BLOCKING (Should Complete Soon)
 
 | # | Item | Status | Effort | Notes |
 |---|------|--------|--------|-------|
-| 7 | **Recruiter job posting → API** | ⚠️ UI exists, not wired | 4h | Form exists in `CreateJob.tsx`, needs API integration. |
-| 8 | **Recruiter company profile → API** | ⚠️ UI exists, not wired | 4h | `CompanyProfile.tsx` is static shell. |
-| 9 | **Recruiter company linking** | ❌ Not started | 2h | No endpoint to link recruiter to company. |
-| 10 | **CI pipeline** | ✅ In progress | — | `.github/workflows/ci.yml` created. |
-| 11 | **npm audit in CI** | ❌ Not started | 1h | Add `npm audit --audit-level=high` to pipeline. |
-| 12 | **Error boundary coverage** | ⚠️ Partial | 2h | Add to all route groups, not just root. |
-| 13 | **Fix ESLint errors** | ❌ 6 errors | 2h | `no-explicit-any` ×3, unused vars ×2, hook-deps warning. |
-| 14 | **Dead code removal** | ❌ Not started | 2h | Remove `App.tsx` duplicate router, commented `Home.tsx` code, Supabase constants. |
-| 15 | **Admin Security page** | ⚠️ Placeholder | 8h | Needs session listing/revocation endpoints + frontend. |
+| 3 | **Remove leftover artifacts** | Not started | 0.5h | `test-output.txt`, `start-mongod.ps1`, `start-mongod.vbs` in backend root. |
+| 4 | **Contact module service layer** | Not started | 2h | `contact.routes.ts` has inline business logic. Extract to `contact.service.ts` for consistency. |
+| 5 | **npm audit in CI** | Not started | 1h | Add `npm audit --audit-level=high` to `.github/workflows/ci.yml`. |
+| 6 | **Fix frontend ESLint errors** | Not started | 2h | 6 errors: `no-explicit-any` x3, unused vars x2, hook-deps warning. |
 
-**Total estimated effort:** ~25 hours
+**Total estimated effort:** ~5.5 hours
 
 ---
 
-## 🟢 FUTURE WORK (Post-Launch)
+## FUTURE WORK (Post-Launch)
 
 | # | Item | Status | Effort | Notes |
 |---|------|--------|--------|-------|
-| 16 | **File upload for resumes** | ❌ Not started | 16h | Currently URL string. Needs upload endpoint, S3/GCS, virus scanning. |
-| 17 | **Code splitting** | ❌ Not started | 4h | `React.lazy` per route group, `manualChunks` in Vite config. |
-| 18 | **Frontend tests** | ❌ Not started | 40h+ | No test harness exists. Add unit, integration, E2E. |
-| 19 | **Load testing** | ❌ Not started | 8h | Artillery/k6 scripts for key endpoints. |
-| 20 | **Admin reports** | ⚠️ UI shell | 16h | Charts and data aggregation endpoints. |
-| 21 | **Audit logging** | ⚠️ UI shell | 12h | Track admin actions, data changes. |
-| 22 | **Email templates** | ❌ Not started | 8h | Password reset, application status, job alerts. |
-| 23 | **Push notifications** | ❌ Not started | 24h | Real-time alerts for application updates. |
-| 24 | **Mobile responsive audit** | ❌ Not started | 8h | Verify all screens work on mobile. |
-| 25 | **Performance optimization** | ❌ Not started | 16h | Index tuning, query optimization, caching. |
+| 7 | **Frontend tests** | Not started | 40h+ | No test harness in `Frontend/`. Add Vitest + React Testing Library. |
+| 8 | **Load testing** | Not started | 8h | Artillery/k6 scripts for key endpoints. |
+| 9 | **Email templates** | Not started | 8h | Password reset, application status, job alerts. |
+| 10 | **Push notifications** | Not started | 24h | Real-time alerts for application updates. |
+| 11 | **Mobile responsive audit** | Not started | 8h | Verify all screens work on mobile. |
+| 12 | **Performance optimization** | Not started | 16h | Index tuning, query optimization, caching. |
+| 13 | **Admin reports/charts** | UI shell exists | 16h | Data aggregation endpoints + chart components. |
+| 14 | **Audit logging dashboard** | UI shell exists | 12h | Track admin actions, data changes with UI. |
 
-**Total estimated effort:** ~152 hours
+**Total estimated effort:** ~132 hours
 
 ---
 
-## Completed Items ✅
+## Completed Items (verified 2026-08-31)
 
 | # | Item | Completed | Notes |
 |---|------|-----------|-------|
+| — | Frontend route guards | 2026-08-28 | `ProtectedRoute` with `allowedRoles` wraps all protected route groups |
+| — | Token key consolidation | 2026-08-28 | Single HTTP client in `baseApi.ts`, consistent `accessToken`/`refreshToken` keys |
+| — | Tailwind Vite plugin | 2026-08-28 | `@tailwindcss/vite` v4.3, no CDN script tag |
+| — | Admin endpoint implementation | 2026-08-28 | 9 backend endpoints, 12 frontend hooks in `adminApi.ts` |
+| — | Recruiter job posting to API | 2026-08-28 | `CreateJob.tsx` wired to `useCreateJobMutation` |
+| — | Recruiter company profile to API | 2026-08-28 | `CompanyProfile.tsx` wired to full company CRUD |
+| — | Recruiter company linking | 2026-08-28 | Via `PATCH /profiles/:id {company_id}` |
+| — | Admin Security page | 2026-08-28 | Session listing/revocation wired |
 | — | JWT auth with refresh rotation | 2026-08-24 | Access + refresh tokens with family tracking |
 | — | Session revocation | 2026-08-24 | Password reset and admin block invalidate sessions |
-| — | Integration tests (25 passing) | 2026-08-24 | Auth, applications, authorization boundaries |
+| — | Integration tests (34 passing) | 2026-08-24 | Auth, applications, authorization boundaries, file uploads |
 | — | Mail adapter | 2026-08-24 | Dev console + Nodemailer SMTP |
 | — | Duplicate application prevention | 2026-08-24 | Compound unique index + E11000 catch |
 | — | Skill-based recommendations | 2026-08-24 | Profile tag overlap scoring |
 | — | Recruiter "my jobs" endpoint | 2026-08-24 | List, edit, delete jobs |
 | — | Admin stats/jobs endpoints | 2026-08-24 | Platform stats and cross-company search |
+| — | File uploads | 2026-08-26 | Resume upload with HMAC-signed URLs |
+| — | Code splitting | 2026-08-26 | React.lazy per route group, manualChunks in Vite config |
+| — | Sentry integration | 2026-08-26 | Both backend and frontend |
+| — | CI/CD pipeline | 2026-08-26 | GitHub Actions workflow |
+| — | Zod form validation | 2026-08-26 | CreateJob, CompanyProfile, Profile forms |
+| — | Cursor-based pagination | 2026-08-26 | Alternative to offset pagination |
+| — | Mongoose query timeouts | 2026-08-26 | Prevent slow queries from hanging |
+| — | Service layer extraction | 2026-08-26 | Admin, companies, saved-jobs, notifications modules |
+| — | Error boundary (root level) | 2026-08-26 | Catches errors, logs to Sentry, renders fallback |
 
 ---
 
 ## Blocking Dependencies
 
 ```
-#1 (Route guards) ──┐
-#2 (Token consolidation) ──┤
-#3 (Tailwind) ──┤
-#4 (CORS) ──┴──► PRODUCTION LAUNCH
-#5 (Admin endpoints) ──┤
-#6 (Security sweep) ──┘
+#1 (CORS config) ──┐
+                    ├──► PRODUCTION LAUNCH
+#2 (ErrorBoundary) ─┘
 
-#7 (Job posting) ──┐
-#8 (Company profile) ──┤
-#9 (Company linking) ──┴──► RECRUITER MVP COMPLETE
+#3 (Artifacts) ──┐
+#4 (Contact SL)  ──┤
+#5 (npm audit)   ──┤
+#6 (ESLint)      ──┴──► CODE QUALITY
 ```
 
 ---
@@ -97,6 +101,7 @@ This document tracks what blocks production launch, what's non-blocking but impo
 ## Notes
 
 - **Admin accounts cannot self-register** by design. Promote via DB or add invite endpoint.
-- **Recruiter must link company before posting job.** Current flow: create company → link via profile PATCH (not yet wired).
+- **Recruiter must link company before posting job.** Current flow: create company → link via profile PATCH.
 - **Auth responses are flat** `{accessToken, refreshToken, user}` while everything else uses `{data}`. Don't normalize one side without the other.
 - **`PATCH /profiles/:id` has an allow-list** — new fields must be added to both `users.repository.ts` and `users.schemas.ts`.
+- **File upload AV scanning** — `scanned` field is set but no AV scanner is wired. Plug one in before exposing files in production.
