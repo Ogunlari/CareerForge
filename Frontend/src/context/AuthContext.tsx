@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { extractErrorMessage } from '@/features/api/baseApi';
-import { authApi, useGetMeQuery, useGoogleAuthMutation, useLoginMutation, useLogoutMutation, useSignUpMutation } from '@/features/auth/authApi';
+import { authApi, useGetMeQuery, useGoogleAuthMutation, useGoogleCheckMutation, useLoginMutation, useLogoutMutation, useSignUpMutation } from '@/features/auth/authApi';
 import { clearCredentials, setUser } from '@/features/auth/authSlice';
 import type { Profile, UserRole } from '@/types';
 
@@ -10,7 +10,8 @@ interface AuthContextValue {
   loading: boolean;
   signIn: (email: string, password: string, remember?: boolean) => Promise<{ error: string | null; user?: Profile }>;
   signUp: (email: string, password: string, name: string, role: UserRole) => Promise<{ error: string | null }>;
-  signInWithGoogle: (credential: string) => Promise<{ error: string | null; user?: Profile }>;
+  signInWithGoogle: (credential: string, role?: 'student' | 'recruiter') => Promise<{ error: string | null; user?: Profile }>;
+  checkGoogleUser: (credential: string) => Promise<{ exists: boolean }>;
   signOut: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -24,6 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const [login] = useLoginMutation();
   const [googleAuth] = useGoogleAuthMutation();
+  const [googleCheck] = useGoogleCheckMutation();
   const [signUpMutation] = useSignUpMutation();
   const [logoutMutation] = useLogoutMutation();
 
@@ -72,12 +74,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       },
 
-      async signInWithGoogle(credential) {
+      async signInWithGoogle(credential, role) {
         try {
-          const data = await googleAuth({ credential }).unwrap();
+          const data = await googleAuth({ credential, role }).unwrap();
           return { error: null, user: data.user };
         } catch (err) {
           return { error: extractErrorMessage(err) };
+        }
+      },
+
+      async checkGoogleUser(credential) {
+        try {
+          const data = await googleCheck({ credential }).unwrap();
+          return { exists: data.exists };
+        } catch {
+          return { exists: true };
         }
       },
 
@@ -103,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       },
     }),
-    [user, skipMe, meFetching, login, googleAuth, signUpMutation, logoutMutation, dispatch, token],
+    [user, skipMe, meFetching, login, googleAuth, googleCheck, signUpMutation, logoutMutation, dispatch, token],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

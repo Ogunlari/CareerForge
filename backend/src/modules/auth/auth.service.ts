@@ -114,8 +114,8 @@ export async function login(
 
 export async function googleAuth(
   credential: string,
-  meta?: { userAgent?: string; ipAddress?: string },
-): Promise<AuthResult> {
+  meta?: { userAgent?: string; ipAddress?: string; role?: 'student' | 'recruiter' },
+): Promise<AuthResult & { isNewUser: boolean }> {
   const clientId = env.GOOGLE_CLIENT_ID;
   if (!clientId) {
     throw new AppError('GOOGLE_AUTH_DISABLED', 501, 'Google sign-in is not configured.');
@@ -141,6 +141,7 @@ export async function googleAuth(
 
   let user = await findUserByEmail(email);
 
+  let isNewUser = false;
   if (user) {
     if (user.is_blocked) {
       throw new AppError('ACCOUNT_BLOCKED', 403, 'This account has been suspended. Contact support.');
@@ -150,13 +151,14 @@ export async function googleAuth(
       await user.save();
     }
   } else {
+    isNewUser = true;
     const randomPassword = randomBytes(32).toString('hex');
     const password_hash = await bcrypt.hash(randomPassword, BCRYPT_ROUNDS);
     user = await insertUser({
       email,
       password_hash,
       full_name: fullName,
-      role: 'student',
+      role: meta?.role || 'student',
     });
     if (avatar) {
       user.avatar = avatar;
@@ -167,7 +169,31 @@ export async function googleAuth(
   const userId = String(user._id);
   const { accessToken, refreshToken } = await createSession(userId, undefined, meta?.userAgent, meta?.ipAddress);
 
-  return { accessToken, refreshToken, user: toPublicUser(user) };
+  return { accessToken, refreshToken, user: toPublicUser(user), isNewUser };
+}
+
+export async function googleUserExists(credential: string): Promise<{ exists: boolean }> {
+  const clientId = env.GOOGLE_CLIENT_ID;
+  if (!clientId) {
+    throw new AppError('GOOGLE_AUTH_DISABLED', 501, 'Google sign-in is not configured.');
+  }
+
+  const client = new OAuth2Client(clientId);
+
+  let ticket;
+  try {
+    ticket = await client.verifyIdToken({ idToken: credential, audience: clientId });
+  } catch {
+    throw new AppError('INVALID_GOOGLE_TOKEN', 401, 'Invalid Google credential.');
+  }
+
+  const payload = ticket.getPayload();
+  if (!payload?.email) {
+    throw new AppError('INVALID_GOOGLE_TOKEN', 401, 'Invalid Google token payload.');
+  }
+
+  const user = await findUserByEmail(payload.email.toLowerCase());
+  return { exists: !!user };
 }
 
 export async function refreshSession(

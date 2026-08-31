@@ -35,8 +35,15 @@ export async function googleLogin(req: Request, res: Response): Promise<void> {
   const result = await authService.googleAuth(input.credential, {
     userAgent: req.headers['user-agent'],
     ipAddress: req.ip,
+    role: input.role,
   });
-  res.status(200).json({ accessToken: result.accessToken, refreshToken: result.refreshToken, user: result.user });
+  res.status(200).json({ accessToken: result.accessToken, refreshToken: result.refreshToken, user: result.user, isNewUser: result.isNewUser });
+}
+
+export async function googleCheck(req: Request, res: Response): Promise<void> {
+  const input = googleAuthSchema.pick({ credential: true }).parse(req.body);
+  const result = await authService.googleUserExists(input.credential);
+  res.status(200).json(result);
 }
 
 export async function refresh(req: Request, res: Response): Promise<void> {

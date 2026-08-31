@@ -28,6 +28,7 @@ export const authRouter = Router();
 authRouter.post('/signup', authLimiter, validateBody(signupSchema), controller.signup);
 authRouter.post('/login', authLimiter, validateBody(loginSchema), controller.login);
 authRouter.post('/google', authLimiter, validateBody(googleAuthSchema), controller.googleLogin);
+authRouter.post('/google/check', authLimiter, validateBody(googleAuthSchema.pick({ credential: true })), controller.googleCheck);
 authRouter.post('/refresh', authLimiter, validateBody(refreshSchema), controller.refresh);
 authRouter.post('/logout', requireAuth, controller.logout);
 authRouter.get('/me', requireAuth, controller.me);

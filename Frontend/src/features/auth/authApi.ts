@@ -43,7 +43,7 @@ export const authApi = baseApi.injectEndpoints({
       },
     }),
 
-    googleAuth: builder.mutation<AuthResponse, { credential: string }>({
+    googleAuth: builder.mutation<AuthResponse & { isNewUser?: boolean }, { credential: string; role?: 'student' | 'recruiter' }>({
       query: (body) => ({ url: '/auth/google', method: 'POST', body }),
       onQueryStarted: async (_arg, { dispatch, queryFulfilled }) => {
         try {
@@ -53,6 +53,10 @@ export const authApi = baseApi.injectEndpoints({
           /* error surfaced to the component */
         }
       },
+    }),
+
+    googleCheck: builder.mutation<{ exists: boolean }, { credential: string }>({
+      query: (body) => ({ url: '/auth/google/check', method: 'POST', body }),
     }),
 
     logout: builder.mutation<{ message: string }, void>({
@@ -110,6 +114,7 @@ export const {
   useSignUpMutation,
   useLoginMutation,
   useGoogleAuthMutation,
+  useGoogleCheckMutation,
   useLogoutMutation,
   useGetMeQuery,
   useLazyGetMeQuery,

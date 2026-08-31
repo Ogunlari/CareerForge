@@ -31,6 +31,7 @@ export const refreshSchema = z.object({
 
 export const googleAuthSchema = z.object({
   credential: z.string().min(1),
+  role: z.enum(['student', 'recruiter']).optional(),
 });
 
 export type SignupInput = z.infer<typeof signupSchema>;
