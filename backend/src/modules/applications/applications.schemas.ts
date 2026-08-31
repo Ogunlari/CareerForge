@@ -6,7 +6,9 @@ export const createApplicationSchema = z.object({
   studentId: objectId,
   jobId: objectId,
   coverLetter: z.string().max(20000).optional(),
-  resumeUrl: z.string().url().max(500).optional(),
+  resumeUrl: z
+    .union([z.literal(''), z.string().url().max(500)])
+    .optional(),
 });
 
 export const listStudentApplicationsQuery = z.object({

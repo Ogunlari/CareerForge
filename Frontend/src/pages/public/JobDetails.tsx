@@ -85,7 +85,7 @@ export default function JobDetails() {
         studentId: user.id,
         jobId,
         coverLetter,
-        resumeUrl: student.resume_url || '',
+        resumeUrl: student.resume_url || undefined,
       }).unwrap();
       setApplyOpen(false);
       setCoverLetter('');
